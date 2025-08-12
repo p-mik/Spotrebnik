@@ -6,6 +6,12 @@
     <title>Seznam výdajů</title>
 </head>
 <body>
+    {% if user.is_authenticated %}
+        <p>Přihlášený uživatel: {{ user.username }}</p>
+    {% else %}
+        <p>Nikdo není přihlášen.</p>
+    {% endif %}
+
     <h1>Seznam výdajů</h1>
 
     <p><a href="{% url 'pridat_vydaj' %}">Přidat nový výdaj</a></p>
