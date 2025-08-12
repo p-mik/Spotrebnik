@@ -1,44 +1,20 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotřebník - Hlavní stránka</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block title %}Spotřebník - Hlavní stránka{% endblock %}
+{% block content %}
     {% if user.is_authenticated %}
         <p>Přihlášený uživatel: {{ user.username }}</p>
-    {% else %}
-        <p>Nikdo není přihlášen.</p>
-    {% endif %}
-
-    <h1>Vítejte v Spotřebníku!</h1>
-
-    {% if user.is_authenticated %}
+        <h1>Vítejte v Spotřebníku!</h1>
         <h2>Celkové výdaje: {{ celkove_vydaje.castka__sum }} Kč</h2>
-
         <h3>Poslední výdaje:</h3>
         <ul>
             {% for vydaj in posledni_vydaje %}
                 <li>{{ vydaj.datum }} - {{ vydaj.castka }} Kč</li>
+            {% empty %}
+                <li>Žádné výdaje.</li>
             {% endfor %}
         </ul>
-
-        <hr>
-
-        <h3>Rychlé odkazy:</h3>
-        <ul>
-            <li><a href="{% url 'seznam_vydaju' %}">Zobrazit výdaje</a></li>
-            <li><a href="{% url 'pridat_vydaj' %}">Přidat nový výdaj</a></li>
-        </ul>
     {% else %}
-        <h2>Přihlášení</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Přihlásit</button>
-        </form>
-        <p><a href="{% url 'registrace' %}">Vytvořit účet</a></p>
+        <h1>Vítejte v Spotřebníku!</h1>
+        <p><a href="{% url 'prihlaseni' %}">Přihlásit se</a></p>
     {% endif %}
-</body>
-</html>
+{% endblock %}

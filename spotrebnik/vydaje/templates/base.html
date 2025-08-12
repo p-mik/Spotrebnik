@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Spotřebník{% endblock %}</title>
+    <style>
+        nav ul { list-style: none; display: flex; gap: 10px; padding: 0; }
+        nav li { display: inline; }
+        nav a, nav button { text-decoration: none; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">Domů</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'seznam_vydaju' %}">Seznam výdajů</a></li>
+                <li><a href="{% url 'pridat_vydaj' %}">Přidat výdaj</a></li>
+                <li>
+                    <form action="{% url 'odhlaseni' %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">Odhlásit se</button>
+                    </form>
+                </li>
+            {% else %}
+                <li><a href="{% url 'prihlaseni' %}">Přihlášení</a></li>
+                <li><a href="{% url 'registrace' %}">Registrace</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>

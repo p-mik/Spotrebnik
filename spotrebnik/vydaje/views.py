@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Vydaj
 from .forms import VydajForm, RegistraceForm
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum  # Importujeme Sum pro agregaci
 
@@ -62,12 +62,10 @@ def home(request):
             'posledni_vydaje': posledni_vydaje,
             'celkove_vydaje': celkove_vydaje,
         })
-    else:
-        if request.method == "POST":
-            form = AuthenticationForm(request, data=request.POST)
-            if form.is_valid():
-                login(request, form.get_user())
-                return redirect('home')
-        else:
-            form = AuthenticationForm()
-        return render(request, 'home.html', {'form': form})
+    return render(request, 'home.html')
+
+
+@login_required
+def odhlaseni(request):
+    logout(request)
+    return redirect('home')
