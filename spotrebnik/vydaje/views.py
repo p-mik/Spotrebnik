@@ -5,8 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.db.models import Sum  # Importujeme Sum pro agregaci
 
+@login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def seznam_vydaju(request):
-    vydaje = Vydaj.objects.all()  # Načteme všechny výdaje z databáze
+    # Zobrazíme pouze výdaje přihlášeného uživatele
+    vydaje = Vydaj.objects.filter(uzivatel=request.user)
     return render(request, 'vydaje/seznam_vydaju.html', {'vydaje': vydaje})
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
