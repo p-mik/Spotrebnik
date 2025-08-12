@@ -6,6 +6,12 @@
     <title>Přidat výdaj</title>
 </head>
 <body>
+    {% if user.is_authenticated %}
+        <p>Přihlášený uživatel: {{ user.username }}</p>
+    {% else %}
+        <p>Nikdo není přihlášen.</p>
+    {% endif %}
+
     <h1>Přidat nový výdaj</h1>
     
     <form method="post">

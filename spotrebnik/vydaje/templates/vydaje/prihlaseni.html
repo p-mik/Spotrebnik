@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrace</title>
+    <title>Přihlášení</title>
 </head>
 <body>
     {% if user.is_authenticated %}
@@ -12,15 +12,15 @@
         <p>Nikdo není přihlášen.</p>
     {% endif %}
 
-    <h1>Registrace</h1>
-    
+    <h1>Přihlášení</h1>
+
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Registrovat</button>
+        <button type="submit">Přihlásit</button>
     </form>
 
     <br>
-    <a href="{% url 'seznam_vydaju' %}">Zpět na seznam výdajů</a>
+    <a href="{% url 'home' %}">Zpět na hlavní stránku</a>
 </body>
 </html>
