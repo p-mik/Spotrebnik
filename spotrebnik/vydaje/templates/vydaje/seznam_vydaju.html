@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seznam výdajů</title>
+</head>
+<body>
+    <h1>Seznam výdajů</h1>
+
+    {% if vydaje %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Typ</th>
+                    <th>Auto</th>
+                    <th>Částka</th>
+                    <th>Tachometr</th>
+                    <th>Množství litrů</th>
+                    <th>Cena za litr</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vydaj in vydaje %}
+                <tr>
+                    <td>{{ vydaj.datum }}</td>
+                    <td>{{ vydaj.typ }}</td>
+                    <td>{{ vydaj.auto }}</td>
+                    <td>{{ vydaj.castka }} Kč</td>
+                    <td>{{ vydaj.tachometr }}</td>
+                    <td>{{ vydaj.mnozstvi_litru|default:"-" }}</td>
+                    <td>{{ vydaj.cena_za_litr|default:"-" }} Kč</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Zatím nemáš žádné výdaje.</p>
+    {% endif %}
+</body>
+</html>

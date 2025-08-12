@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotřebník - Hlavní stránka</title>
+</head>
+<body>
+    <h1>Vítejte v Spotřebníku!</h1>
+
+    <h2>Celkové výdaje: {{ celkove_vydaje.castka__sum }} Kč</h2>
+
+    <h3>Poslední výdaje:</h3>
+    <ul>
+        {% for vydaj in posledni_vydaje %}
+            <li>{{ vydaj.datum }} - {{ vydaj.castka }} Kč</li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <h3>Rychlé odkazy:</h3>
+    <ul>
+        <li><a href="{% url 'seznam_vydaju' %}">Zobrazit výdaje</a></li>
+        <li><a href="{% url 'pridat_vydaj' %}">Přidat nový výdaj</a></li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,44 @@
+from django.shortcuts import render, redirect
+from .models import Vydaj
+from .forms import VydajForm, RegistraceForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
+from django.db.models import Sum  # Importujeme Sum pro agregaci
+
+def seznam_vydaju(request):
+    vydaje = Vydaj.objects.all()  # Načteme všechny výdaje z databáze
+    return render(request, 'vydaje/seznam_vydaju.html', {'vydaje': vydaje})
+
+@login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
+def pridat_vydaj(request):
+    if request.method == "POST":
+        form = VydajForm(request.POST)
+        if form.is_valid():
+            vydaj = form.save(commit=False)  # Neuložíme hned
+            vydaj.uzivatel = request.user  # Přiřadíme aktuálního uživatele
+            vydaj.save()  # Teprve teď uložíme
+            return redirect('seznam_vydaju')
+    else:
+        form = VydajForm()
+    
+    return render(request, 'vydaje/pridat_vydaj.html', {'form': form})
+
+def registrace(request):
+    if request.method == "POST":
+        form = RegistraceForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)  # Vytvoříme uživatele, ale neuložíme ho hned
+            user.set_password(form.cleaned_data["password"])  # Zahashujeme heslo
+            user.save()  # Uložíme uživatele do databáze
+            login(request, user)  # Automaticky přihlásíme nového uživatele
+            return redirect('seznam_vydaju')  # Přesměrování na seznam výdajů
+    else:
+        form = RegistraceForm()
+    
+    return render(request, 'vydaje/registrace.html', {'form': form})
+
+def home(request):
+    # Tady načteme poslední výdaje (můžeme upravit podle potřeby)
+    posledni_vydaje = Vydaj.objects.all().order_by('-datum')[:5]  # Posledních 5 výdajů
+    celkove_vydaje = Vydaj.objects.all().aggregate(Sum('castka'))  # Souhrn výdajů
+    return render(request, 'home.html', {'posledni_vydaje': posledni_vydaje, 'celkove_vydaje': celkove_vydaje})
