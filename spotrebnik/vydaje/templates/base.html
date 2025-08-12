@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotřebník</title>
+</head>
+<body>
+    <nav style="background-color:#eee; padding:10px;">
+        <a href="{% url 'home' %}" style="margin-right:10px;">Domů</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'seznam_vydaju' %}" style="margin-right:10px;">Seznam výdajů</a>
+            <a href="{% url 'pridat_vydaj' %}" style="margin-right:10px;">Přidat výdaj</a>
+            <form action="{% url 'odhlasit' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">Odhlásit</button>
+            </form>
+        {% else %}
+            <a href="{% url 'prihlaseni' %}" style="margin-right:10px;">Přihlášení</a>
+            <a href="{% url 'registrace' %}" style="margin-right:10px;">Registrace</a>
+        {% endif %}
+    </nav>
+
+    {% if user.is_authenticated %}
+        <p>Přihlášený uživatel: {{ user.username }}</p>
+    {% else %}
+        <p>Nikdo není přihlášen.</p>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>

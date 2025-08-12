@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from .models import Vydaj
 from .forms import VydajForm, RegistraceForm
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum  # Importujeme Sum pro agregaci
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
@@ -39,8 +40,40 @@ def registrace(request):
     
     return render(request, 'vydaje/registrace.html', {'form': form})
 
+
+def prihlaseni(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user())
+            return redirect('home')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'vydaje/prihlaseni.html', {'form': form})
+
+
+@login_required
+def odhlasit(request):
+    logout(request)
+    return redirect('home')
+
+
 def home(request):
-    # Tady načteme poslední výdaje (můžeme upravit podle potřeby)
-    posledni_vydaje = Vydaj.objects.all().order_by('-datum')[:5]  # Posledních 5 výdajů
-    celkove_vydaje = Vydaj.objects.all().aggregate(Sum('castka'))  # Souhrn výdajů
-    return render(request, 'home.html', {'posledni_vydaje': posledni_vydaje, 'celkove_vydaje': celkove_vydaje})
+    if request.user.is_authenticated:
+        posledni_vydaje = Vydaj.objects.filter(uzivatel=request.user).order_by('-datum')[:5]
+        celkove_vydaje = Vydaj.objects.filter(uzivatel=request.user).aggregate(Sum('castka'))
+        return render(request, 'home.html', {
+            'posledni_vydaje': posledni_vydaje,
+            'celkove_vydaje': celkove_vydaje,
+        })
+    else:
+        if request.method == "POST":
+            form = AuthenticationForm(request, data=request.POST)
+            if form.is_valid():
+                login(request, form.get_user())
+                return redirect('home')
+        else:
+            form = AuthenticationForm()
+        return render(request, 'home.html', {'form': form})

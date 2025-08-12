@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Přidat nový výdaj</h1>
+    <h1>Přihlášení</h1>
 
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Uložit</button>
+        <button type="submit">Přihlásit</button>
     </form>
 
     <br>
-    <a href="{% url 'seznam_vydaju' %}">Zpět na seznam výdajů</a>
+    <a href="{% url 'home' %}">Zpět na hlavní stránku</a>
 {% endblock %}
