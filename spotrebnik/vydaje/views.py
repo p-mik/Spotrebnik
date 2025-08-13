@@ -5,12 +5,53 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum  # Importujeme Sum pro agregaci
+from django.core.paginator import Paginator
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def seznam_vydaju(request):
-    # Zobrazíme pouze výdaje přihlášeného uživatele
+    # Zobrazíme pouze výdaje přihlášeného uživatele a aplikujeme filtry
     vydaje = Vydaj.objects.filter(uzivatel=request.user)
-    return render(request, 'vydaje/seznam_vydaju.html', {'vydaje': vydaje})
+
+    typ_param = request.GET.get("typ")
+    if typ_param:
+        vydaje = vydaje.filter(typ_id=typ_param)
+
+    auto_param = request.GET.get("auto")
+    if auto_param:
+        vydaje = vydaje.filter(auto_id=auto_param)
+
+    od_param = request.GET.get("od")
+    if od_param:
+        vydaje = vydaje.filter(datum__gte=od_param)
+
+    do_param = request.GET.get("do")
+    if do_param:
+        vydaje = vydaje.filter(datum__lte=do_param)
+
+    sort_param = request.GET.get("sort", "-datum")
+    allowed_sorts = ["datum", "-datum", "castka", "-castka"]
+    if sort_param not in allowed_sorts:
+        sort_param = "-datum"
+    vydaje = vydaje.order_by(sort_param)
+
+    paginator = Paginator(vydaje, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    params = request.GET.copy()
+    if "page" in params:
+        params.pop("page")
+    param_string = params.urlencode()
+
+    context = {
+        "vydaje": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "typy": TypVydaje.objects.all(),
+        "auta": Auto.objects.filter(uzivatel=request.user),
+        "param_string": param_string,
+    }
+    return render(request, "vydaje/seznam_vydaju.html", context)
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def pridat_vydaj(request):
