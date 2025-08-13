@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -91,11 +92,14 @@ class TestPridatVydaj(TestCase):
             "auto": self.auto.id,
             "typ": self.typ.id,
             "datum": date.today().isoformat(),
-            "castka": "123.45",
+            "castka": "100",
+            "mnozstvi_litru": "10",
         }
         response = self.client.post(reverse("pridat_vydaj"), data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Vydaj.objects.filter(uzivatel=self.user).count(), 1)
+        vydaj = Vydaj.objects.get(uzivatel=self.user)
+        self.assertEqual(vydaj.cena_za_litr, Decimal("10"))
 
     def test_add_expense_invalid_form(self):
         self.client.login(username="user", password="pass")
