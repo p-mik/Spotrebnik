@@ -13,14 +13,14 @@ class TestSeznamVydajuView(TestCase):
         self.typ = TypVydaje.objects.create(nazev="Benzin")
         self.auto1 = Auto.objects.create(uzivatel=self.user1, nazev="Auto1", spz="ABC123")
         self.auto2 = Auto.objects.create(uzivatel=self.user2, nazev="Auto2", spz="XYZ789")
-        Vydaj.objects.create(
+        self.vydaj1 = Vydaj.objects.create(
             uzivatel=self.user1,
             auto=self.auto1,
             datum=date.today(),
             typ=self.typ,
             castka=100,
         )
-        Vydaj.objects.create(
+        self.vydaj2 = Vydaj.objects.create(
             uzivatel=self.user2,
             auto=self.auto2,
             datum=date.today(),
@@ -39,6 +39,44 @@ class TestSeznamVydajuView(TestCase):
         content = response.content.decode()
         self.assertIn("Auto1", content)
         self.assertNotIn("Auto2", content)
+
+    def test_filter_by_typ(self):
+        typ2 = TypVydaje.objects.create(nazev="Servis")
+        vydaj_novy = Vydaj.objects.create(
+            uzivatel=self.user1,
+            auto=self.auto1,
+            datum=date.today(),
+            typ=typ2,
+            castka=50,
+        )
+        self.client.login(username="user1", password="pass")
+        response = self.client.get(reverse("seznam_vydaju"), {"typ": typ2.id})
+        self.assertEqual(list(response.context["vydaje"]), [vydaj_novy])
+
+    def test_filter_by_auto(self):
+        auto_jine = Auto.objects.create(uzivatel=self.user1, nazev="Auto3", spz="DEF456")
+        vydaj_auto = Vydaj.objects.create(
+            uzivatel=self.user1,
+            auto=auto_jine,
+            datum=date.today(),
+            typ=self.typ,
+            castka=75,
+        )
+        self.client.login(username="user1", password="pass")
+        response = self.client.get(reverse("seznam_vydaju"), {"auto": auto_jine.id})
+        self.assertEqual(list(response.context["vydaje"]), [vydaj_auto])
+
+    def test_filter_by_date_range(self):
+        Vydaj.objects.create(
+            uzivatel=self.user1,
+            auto=self.auto1,
+            datum=date(2020, 1, 1),
+            typ=self.typ,
+            castka=30,
+        )
+        self.client.login(username="user1", password="pass")
+        response = self.client.get(reverse("seznam_vydaju"), {"od": date.today().isoformat()})
+        self.assertEqual(list(response.context["vydaje"]), [self.vydaj1])
 
 
 class TestPridatVydaj(TestCase):
