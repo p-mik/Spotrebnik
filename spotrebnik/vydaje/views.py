@@ -23,8 +23,30 @@ def pridat_vydaj(request):
             return redirect('seznam_vydaju')
     else:
         form = VydajForm()
-    
+
     return render(request, 'vydaje/pridat_vydaj.html', {'form': form})
+
+
+@login_required
+def upravit_vydaj(request, id):
+    vydaj = get_object_or_404(Vydaj, id=id, uzivatel=request.user)
+    if request.method == 'POST':
+        form = VydajForm(request.POST, instance=vydaj)
+        if form.is_valid():
+            form.save()
+            return redirect('seznam_vydaju')
+    else:
+        form = VydajForm(instance=vydaj)
+    return render(request, 'vydaje/upravit_vydaj.html', {'form': form})
+
+
+@login_required
+def smazat_vydaj(request, id):
+    vydaj = get_object_or_404(Vydaj, id=id, uzivatel=request.user)
+    if request.method == 'POST':
+        vydaj.delete()
+        return redirect('seznam_vydaju')
+    return render(request, 'vydaje/potvrdit_smazani.html', {'vydaj': vydaj})
 
 def registrace(request):
     if request.method == "POST":
