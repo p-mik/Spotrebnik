@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Seznam typů výdajů{% endblock %}
+{% block content %}
+    <h1>Seznam typů výdajů</h1>
+    {% if typy %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Název</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for typ in typy %}
+                <tr>
+                    <td>{{ typ.nazev }}</td>
+                    <td>
+                        <a href="{% url 'upravit_typ' typ.id %}">Upravit</a> |
+                        <a href="{% url 'smazat_typ' typ.id %}">Smazat</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Zatím nejsou definovány žádné typy výdajů.</p>
+    {% endif %}
+{% endblock %}

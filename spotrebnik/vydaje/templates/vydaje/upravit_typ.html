@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Upravit typ výdaje{% endblock %}
+{% block content %}
+    <h1>Upravit typ výdaje</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Uložit</button>
+    </form>
+{% endblock %}

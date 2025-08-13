@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from .models import Auto, Vydaj
-from .forms import AutoForm, VydajForm, RegistraceForm
+from .models import Auto, Vydaj, TypVydaje
+from .forms import AutoForm, VydajForm, RegistraceForm, TypVydajeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -145,3 +145,43 @@ def smazat_auto(request, id):
         auto.delete()
         return redirect('seznam_aut')
     return render(request, 'vydaje/smazat_auto.html', {'auto': auto})
+
+
+@login_required
+def seznam_typu(request):
+    typy = TypVydaje.objects.all()
+    return render(request, 'vydaje/seznam_typu.html', {'typy': typy})
+
+
+@login_required
+def pridat_typ(request):
+    if request.method == 'POST':
+        form = TypVydajeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('seznam_typu')
+    else:
+        form = TypVydajeForm()
+    return render(request, 'vydaje/pridat_typ.html', {'form': form})
+
+
+@login_required
+def upravit_typ(request, id):
+    typ = get_object_or_404(TypVydaje, id=id)
+    if request.method == 'POST':
+        form = TypVydajeForm(request.POST, instance=typ)
+        if form.is_valid():
+            form.save()
+            return redirect('seznam_typu')
+    else:
+        form = TypVydajeForm(instance=typ)
+    return render(request, 'vydaje/upravit_typ.html', {'form': form})
+
+
+@login_required
+def smazat_typ(request, id):
+    typ = get_object_or_404(TypVydaje, id=id)
+    if request.method == 'POST':
+        typ.delete()
+        return redirect('seznam_typu')
+    return render(request, 'vydaje/smazat_typ.html', {'typ': typ})
