@@ -56,14 +56,14 @@ def seznam_vydaju(request):
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def pridat_vydaj(request):
     if request.method == "POST":
-        form = VydajForm(request.POST)
+        form = VydajForm(request.POST, user=request.user)
         if form.is_valid():
             vydaj = form.save(commit=False)  # Neuložíme hned
             vydaj.uzivatel = request.user  # Přiřadíme aktuálního uživatele
             vydaj.save()  # Teprve teď uložíme
             return redirect('seznam_vydaju')
     else:
-        form = VydajForm()
+        form = VydajForm(user=request.user)
 
     return render(request, 'vydaje/pridat_vydaj.html', {'form': form})
 
@@ -72,12 +72,12 @@ def pridat_vydaj(request):
 def upravit_vydaj(request, id):
     vydaj = get_object_or_404(Vydaj, id=id, uzivatel=request.user)
     if request.method == 'POST':
-        form = VydajForm(request.POST, instance=vydaj)
+        form = VydajForm(request.POST, instance=vydaj, user=request.user)
         if form.is_valid():
             form.save()
             return redirect('seznam_vydaju')
     else:
-        form = VydajForm(instance=vydaj)
+        form = VydajForm(instance=vydaj, user=request.user)
     return render(request, 'vydaje/upravit_vydaj.html', {'form': form})
 
 

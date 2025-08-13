@@ -114,6 +114,15 @@ class TestPridatVydaj(TestCase):
         self.assertIn("castka", response.context["form"].errors)
         self.assertEqual(Vydaj.objects.count(), 0)
 
+    def test_auto_field_prefilled_for_single_auto(self):
+        other_user = User.objects.create_user(username="other", password="pass")
+        Auto.objects.create(uzivatel=other_user, nazev="Auto2", spz="XYZ789")
+        self.client.login(username="user", password="pass")
+        response = self.client.get(reverse("pridat_vydaj"))
+        form = response.context["form"]
+        self.assertEqual(list(form.fields["auto"].queryset), [self.auto])
+        self.assertEqual(form.initial.get("auto"), self.auto)
+
 
 class TestRegistraceView(TestCase):
     def test_registration_and_auto_login(self):
