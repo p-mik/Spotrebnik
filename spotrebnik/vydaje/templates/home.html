@@ -13,6 +13,24 @@
                 <li>Žádné výdaje.</li>
             {% endfor %}
         </ul>
+        <h3>Souhrn podle aut:</h3>
+        <table>
+            <tr><th>Auto</th><th>Celkem</th></tr>
+            {% for souhrn in souhrn_podle_aut %}
+                <tr><td>{{ souhrn.auto__nazev }}</td><td>{{ souhrn.celkova_castka }} Kč</td></tr>
+            {% empty %}
+                <tr><td colspan="2">Žádná data.</td></tr>
+            {% endfor %}
+        </table>
+        <h3>Souhrn podle typů:</h3>
+        <table>
+            <tr><th>Typ</th><th>Celkem</th></tr>
+            {% for souhrn in souhrn_podle_typu %}
+                <tr><td>{{ souhrn.typ__nazev }}</td><td>{{ souhrn.celkova_castka }} Kč</td></tr>
+            {% empty %}
+                <tr><td colspan="2">Žádná data.</td></tr>
+            {% endfor %}
+        </table>
     {% else %}
         <h1>Vítejte v Spotřebníku!</h1>
         <p><a href="{% url 'prihlaseni' %}">Přihlásit se</a></p>

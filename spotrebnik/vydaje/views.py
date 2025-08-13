@@ -80,9 +80,21 @@ def home(request):
     if request.user.is_authenticated:
         posledni_vydaje = Vydaj.objects.filter(uzivatel=request.user).order_by('-datum')[:5]
         celkove_vydaje = Vydaj.objects.filter(uzivatel=request.user).aggregate(Sum('castka'))
+        souhrn_podle_aut = (
+            Vydaj.objects.filter(uzivatel=request.user)
+            .values('auto__nazev')
+            .annotate(celkova_castka=Sum('castka'))
+        )
+        souhrn_podle_typu = (
+            Vydaj.objects.filter(uzivatel=request.user)
+            .values('typ__nazev')
+            .annotate(celkova_castka=Sum('castka'))
+        )
         return render(request, 'home.html', {
             'posledni_vydaje': posledni_vydaje,
             'celkove_vydaje': celkove_vydaje,
+            'souhrn_podle_aut': souhrn_podle_aut,
+            'souhrn_podle_typu': souhrn_podle_typu,
         })
     return render(request, 'home.html')
 
