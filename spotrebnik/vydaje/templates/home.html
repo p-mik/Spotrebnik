@@ -4,7 +4,7 @@
     {% if user.is_authenticated %}
         <p>Přihlášený uživatel: {{ user.username }}</p>
         <h1>Vítejte v Spotřebníku!</h1>
-        <h2>Celkové výdaje: {{ celkove_vydaje.castka__sum }} Kč</h2>
+        <h2>Celkové výdaje: {{ celkove_vydaje|default:0 }} Kč</h2>
         <h3>Poslední výdaje:</h3>
         <ul>
             {% for vydaj in posledni_vydaje %}
