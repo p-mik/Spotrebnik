@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User  # Import uživatelského modelu
+from decimal import Decimal
 
 class Auto(models.Model):
     uzivatel = models.ForeignKey(User, on_delete=models.CASCADE)  # Každé auto patří uživateli
@@ -25,6 +26,13 @@ class Vydaj(models.Model):
     tachometr = models.IntegerField(blank=True, null=True)
     mnozstvi_litru = models.FloatField(blank=True, null=True)
     cena_za_litr = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.mnozstvi_litru and self.mnozstvi_litru != 0:
+            self.cena_za_litr = self.castka / Decimal(str(self.mnozstvi_litru))
+        else:
+            self.cena_za_litr = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.typ} - {self.auto} - {self.datum} - {self.castka} Kč"

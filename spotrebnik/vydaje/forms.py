@@ -5,7 +5,7 @@ from .models import Auto, Vydaj, TypVydaje
 class VydajForm(forms.ModelForm):
     class Meta:
         model = Vydaj
-        fields = ['auto', 'typ', 'datum', 'castka', 'tachometr', 'mnozstvi_litru', 'cena_za_litr']
+        fields = ['auto', 'typ', 'datum', 'castka', 'tachometr', 'mnozstvi_litru']
         widgets = {
             'datum': forms.DateInput(attrs={'type': 'date'}),
         }
