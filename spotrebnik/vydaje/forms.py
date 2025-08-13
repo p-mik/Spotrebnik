@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Vydaj
+from .models import Auto, Vydaj
 
 class VydajForm(forms.ModelForm):
     class Meta:
@@ -9,6 +9,12 @@ class VydajForm(forms.ModelForm):
         widgets = {
             'datum': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
+class AutoForm(forms.ModelForm):
+    class Meta:
+        model = Auto
+        fields = ["nazev", "spz"]
 
 class RegistraceForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Heslo")

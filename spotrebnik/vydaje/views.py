@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
-from .models import Vydaj
-from .forms import VydajForm, RegistraceForm
+from django.shortcuts import get_object_or_404, render, redirect
+from .models import Auto, Vydaj
+from .forms import AutoForm, VydajForm, RegistraceForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -69,3 +69,45 @@ def home(request):
 def odhlaseni(request):
     logout(request)
     return redirect('home')
+
+
+@login_required
+def seznam_aut(request):
+    auta = Auto.objects.filter(uzivatel=request.user)
+    return render(request, 'vydaje/seznam_aut.html', {'auta': auta})
+
+
+@login_required
+def pridat_auto(request):
+    if request.method == 'POST':
+        form = AutoForm(request.POST)
+        if form.is_valid():
+            auto = form.save(commit=False)
+            auto.uzivatel = request.user
+            auto.save()
+            return redirect('seznam_aut')
+    else:
+        form = AutoForm()
+    return render(request, 'vydaje/pridat_auto.html', {'form': form})
+
+
+@login_required
+def upravit_auto(request, id):
+    auto = get_object_or_404(Auto, id=id, uzivatel=request.user)
+    if request.method == 'POST':
+        form = AutoForm(request.POST, instance=auto)
+        if form.is_valid():
+            form.save()
+            return redirect('seznam_aut')
+    else:
+        form = AutoForm(instance=auto)
+    return render(request, 'vydaje/upravit_auto.html', {'form': form})
+
+
+@login_required
+def smazat_auto(request, id):
+    auto = get_object_or_404(Auto, id=id, uzivatel=request.user)
+    if request.method == 'POST':
+        auto.delete()
+        return redirect('seznam_aut')
+    return render(request, 'vydaje/smazat_auto.html', {'auto': auto})

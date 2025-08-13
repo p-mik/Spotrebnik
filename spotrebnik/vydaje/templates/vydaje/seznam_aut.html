@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Seznam aut{% endblock %}
+{% block content %}
+    <h1>Seznam aut</h1>
+    {% if auta %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Název</th>
+                    <th>SPZ</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for auto in auta %}
+                <tr>
+                    <td>{{ auto.nazev }}</td>
+                    <td>{{ auto.spz }}</td>
+                    <td>
+                        <a href="{% url 'upravit_auto' auto.id %}">Upravit</a> |
+                        <a href="{% url 'smazat_auto' auto.id %}">Smazat</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Zatím nemáš žádná auta.</p>
+    {% endif %}
+{% endblock %}
