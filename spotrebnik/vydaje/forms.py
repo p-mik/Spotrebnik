@@ -10,6 +10,17 @@ class VydajForm(forms.ModelForm):
             'datum': forms.DateInput(attrs={'type': 'date'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['auto'].queryset = Auto.objects.filter(uzivatel=user)
+            if (
+                'auto' not in self.initial
+                and self.fields['auto'].queryset.count() == 1
+            ):
+                self.initial['auto'] = self.fields['auto'].queryset.first()
+
 
 class AutoForm(forms.ModelForm):
     class Meta:
