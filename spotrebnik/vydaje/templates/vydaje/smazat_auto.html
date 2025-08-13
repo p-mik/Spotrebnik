@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Smazat auto{% endblock %}
+{% block content %}
+    <h1>Opravdu chceš smazat auto {{ auto }}?</h1>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Ano, smazat</button>
+    </form>
+    <a href="{% url 'seznam_aut' %}">Zpět</a>
+{% endblock %}
