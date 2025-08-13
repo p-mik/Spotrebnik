@@ -3,7 +3,7 @@
 {% block content %}
     {% if user.is_authenticated %}
         <p>Přihlášený uživatel: {{ user.username }}</p>
-        <h1>Vítejte v Spotřebníku!</h1>
+        <h1>Vítejte ve Spotřebníku!</h1>
         <h2>Celkové výdaje: {{ celkove_vydaje|default:0 }} Kč</h2>
         <h3>Poslední výdaje:</h3>
         <ul>
