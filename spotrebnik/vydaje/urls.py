@@ -10,12 +10,16 @@ from .views import (
     seznam_vydaju,
     smazat_auto,
     upravit_auto,
+    upravit_vydaj,
+    smazat_vydaj,
 )
 
 urlpatterns = [
     path('', home, name='home'),  # Hlavní stránka
     path('vydaje/', seznam_vydaju, name='seznam_vydaju'),
     path('vydaje/pridat/', pridat_vydaj, name='pridat_vydaj'),
+    path('vydaje/<int:id>/upravit/', upravit_vydaj, name='upravit_vydaj'),
+    path('vydaje/<int:id>/smazat/', smazat_vydaj, name='smazat_vydaj'),
     path('auta/', seznam_aut, name='seznam_aut'),
     path('auta/pridat/', pridat_auto, name='pridat_auto'),
     path('auta/<int:id>/upravit/', upravit_auto, name='upravit_auto'),
