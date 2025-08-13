@@ -12,6 +12,10 @@ from .views import (
     upravit_auto,
     upravit_vydaj,
     smazat_vydaj,
+    seznam_typu,
+    pridat_typ,
+    upravit_typ,
+    smazat_typ,
 )
 
 urlpatterns = [
@@ -24,6 +28,10 @@ urlpatterns = [
     path('auta/pridat/', pridat_auto, name='pridat_auto'),
     path('auta/<int:id>/upravit/', upravit_auto, name='upravit_auto'),
     path('auta/<int:id>/smazat/', smazat_auto, name='smazat_auto'),
+    path('typy/', seznam_typu, name='seznam_typu'),
+    path('typy/pridat/', pridat_typ, name='pridat_typ'),
+    path('typy/<int:id>/upravit/', upravit_typ, name='upravit_typ'),
+    path('typy/<int:id>/smazat/', smazat_typ, name='smazat_typ'),
     path('registrace/', registrace, name='registrace'),  # Přidání URL pro registraci
     path('prihlaseni/', prihlaseni, name='prihlaseni'),
     path('odhlasit/', odhlaseni, name='odhlaseni'),

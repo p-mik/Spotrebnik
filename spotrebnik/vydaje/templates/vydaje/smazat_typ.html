@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Smazat typ výdaje{% endblock %}
+{% block content %}
+    <h1>Opravdu chceš smazat typ {{ typ.nazev }}?</h1>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Ano, smazat</button>
+    </form>
+    <a href="{% url 'seznam_typu' %}">Zpět</a>
+{% endblock %}
