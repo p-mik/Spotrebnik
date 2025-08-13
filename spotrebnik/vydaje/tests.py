@@ -123,3 +123,47 @@ class TestRegistraceView(TestCase):
         self.assertTrue(User.objects.filter(username="novy").exists())
         self.assertTrue(response.context["user"].is_authenticated)
         self.assertEqual(response.context["user"].username, "novy")
+
+
+class TestAutoViews(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="user", password="pass")
+        self.auto = Auto.objects.create(
+            uzivatel=self.user, nazev="Auto1", spz="ABC123"
+        )
+
+    def test_pridat_auto(self):
+        self.client.login(username="user", password="pass")
+        data = {"nazev": "Auto2", "spz": "XYZ789"}
+        response = self.client.post(reverse("pridat_auto"), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            Auto.objects.filter(uzivatel=self.user, nazev="Auto2", spz="XYZ789").exists()
+        )
+
+    def test_pridat_auto_requires_login(self):
+        response = self.client.get(reverse("pridat_auto"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_upravit_auto(self):
+        self.client.login(username="user", password="pass")
+        data = {"nazev": "AutoUpraveno", "spz": "NEW123"}
+        response = self.client.post(reverse("upravit_auto", args=[self.auto.id]), data)
+        self.assertEqual(response.status_code, 302)
+        self.auto.refresh_from_db()
+        self.assertEqual(self.auto.nazev, "AutoUpraveno")
+        self.assertEqual(self.auto.spz, "NEW123")
+
+    def test_upravit_auto_requires_login(self):
+        response = self.client.get(reverse("upravit_auto", args=[self.auto.id]))
+        self.assertEqual(response.status_code, 302)
+
+    def test_smazat_auto(self):
+        self.client.login(username="user", password="pass")
+        response = self.client.post(reverse("smazat_auto", args=[self.auto.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Auto.objects.filter(id=self.auto.id).exists())
+
+    def test_smazat_auto_requires_login(self):
+        response = self.client.get(reverse("smazat_auto", args=[self.auto.id]))
+        self.assertEqual(response.status_code, 302)
