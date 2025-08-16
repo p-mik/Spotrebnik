@@ -2,6 +2,7 @@
 {% block title %}Seznam typů výdajů{% endblock %}
 {% block content %}
     <h1>Seznam typů výdajů</h1>
+    <p><a href="{% url 'pridat_typ' %}">Přidat nový typ</a></p>
     {% if typy %}
         <table border="1">
             <thead>
