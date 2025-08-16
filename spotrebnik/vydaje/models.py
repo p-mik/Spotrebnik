@@ -20,7 +20,8 @@ class Vydaj(models.Model):
     uzivatel = models.ForeignKey(User, on_delete=models.CASCADE)  # Každý výdaj patří uživateli
     auto = models.ForeignKey(Auto, on_delete=models.CASCADE)  # Výdaj se váže ke konkrétnímu autu
     datum = models.DateField()
-    typ = models.ForeignKey(TypVydaje, on_delete=models.CASCADE)  
+    datum_pridani = models.DateField(auto_now_add=True, null=True, blank=True)
+    typ = models.ForeignKey(TypVydaje, on_delete=models.CASCADE)
     castka = models.DecimalField(max_digits=10, decimal_places=2)
     popis = models.TextField(blank=True, null=True)
     tachometr = models.IntegerField(blank=True, null=True)

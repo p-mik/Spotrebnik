@@ -94,12 +94,15 @@ class TestPridatVydaj(TestCase):
             "datum": date.today().isoformat(),
             "castka": "100",
             "mnozstvi_litru": "10",
+            "popis": "Test note",
         }
         response = self.client.post(reverse("pridat_vydaj"), data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Vydaj.objects.filter(uzivatel=self.user).count(), 1)
         vydaj = Vydaj.objects.get(uzivatel=self.user)
         self.assertEqual(vydaj.cena_za_litr, Decimal("10"))
+        self.assertEqual(vydaj.popis, "Test note")
+        self.assertEqual(vydaj.datum_pridani, date.today())
 
     def test_add_expense_invalid_form(self):
         self.client.login(username="user", password="pass")

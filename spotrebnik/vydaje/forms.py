@@ -5,9 +5,12 @@ from .models import Auto, Vydaj, TypVydaje
 class VydajForm(forms.ModelForm):
     class Meta:
         model = Vydaj
-        fields = ['auto', 'typ', 'datum', 'castka', 'tachometr', 'mnozstvi_litru']
+        fields = ['auto', 'typ', 'datum', 'castka', 'tachometr', 'mnozstvi_litru', 'popis']
         widgets = {
             'datum': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'popis': 'Poznámka',
         }
 
     def __init__(self, *args, **kwargs):
