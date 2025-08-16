@@ -19,6 +19,8 @@
                 <li><a href="{% url 'pridat_auto' %}">Přidat auto</a></li>
                 <li><a href="{% url 'seznam_vydaju' %}">Seznam výdajů</a></li>
                 <li><a href="{% url 'pridat_vydaj' %}">Přidat výdaj</a></li>
+                <li><a href="{% url 'seznam_typu' %}">Seznam typů</a></li>
+                <li><a href="{% url 'pridat_typ' %}">Přidat typ</a></li>
                 <li>
                     <form action="{% url 'odhlaseni' %}" method="post" style="display:inline;">
                         {% csrf_token %}

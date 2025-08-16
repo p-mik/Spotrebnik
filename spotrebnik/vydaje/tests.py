@@ -11,7 +11,7 @@ class TestSeznamVydajuView(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username="user1", password="pass")
         self.user2 = User.objects.create_user(username="user2", password="pass")
-        self.typ = TypVydaje.objects.create(nazev="Benzin")
+        self.typ, _ = TypVydaje.objects.get_or_create(nazev="Benzin")
         self.auto1 = Auto.objects.create(uzivatel=self.user1, nazev="Auto1", spz="ABC123")
         self.auto2 = Auto.objects.create(uzivatel=self.user2, nazev="Auto2", spz="XYZ789")
         self.vydaj1 = Vydaj.objects.create(
@@ -42,7 +42,7 @@ class TestSeznamVydajuView(TestCase):
         self.assertNotIn("Auto2", content)
 
     def test_filter_by_typ(self):
-        typ2 = TypVydaje.objects.create(nazev="Servis")
+        typ2, _ = TypVydaje.objects.get_or_create(nazev="Servis")
         vydaj_novy = Vydaj.objects.create(
             uzivatel=self.user1,
             auto=self.auto1,
@@ -84,7 +84,7 @@ class TestPridatVydaj(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="user", password="pass")
         self.auto = Auto.objects.create(uzivatel=self.user, nazev="Auto", spz="ABC123")
-        self.typ = TypVydaje.objects.create(nazev="Benzin")
+        self.typ, _ = TypVydaje.objects.get_or_create(nazev="Benzin")
 
     def test_add_expense_success(self):
         self.client.login(username="user", password="pass")
