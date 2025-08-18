@@ -1,0 +1,4 @@
+<div class="card p-3 h-100">
+  {% if title %}<h5 class="mb-3">{{ title }}</h5>{% endif %}
+  {{ slot|safe }}
+</div>
