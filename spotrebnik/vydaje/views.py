@@ -7,10 +7,84 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum  # Importujeme Sum pro agregaci
 from django.core.paginator import Paginator
+from datetime import date
+from calendar import monthrange
 import csv
+
+
+def _next_month(d, day):
+    year = d.year + (1 if d.month == 12 else 0)
+    month = 1 if d.month == 12 else d.month + 1
+    last_day = monthrange(year, month)[1]
+    return date(year, month, min(day, last_day))
+
+
+def generuj_leasingove_platby(user):
+    typ, _ = TypVydaje.objects.get_or_create(nazev="Operativní leasing")
+    today = date.today()
+    for auto in Auto.objects.filter(uzivatel=user, operativni_leasing=True):
+        due = auto.posledni_platba
+        if due is None:
+            continue
+        next_due = _next_month(due, auto.den_splatnosti)
+        while next_due <= today:
+            Vydaj.objects.create(
+                uzivatel=user,
+                auto=auto,
+                datum=next_due,
+                typ=typ,
+                castka=auto.mesicni_platba,
+                popis="Operativní leasing",
+            )
+            auto.posledni_platba = next_due
+            auto.save(update_fields=["posledni_platba"])
+            next_due = _next_month(next_due, auto.den_splatnosti)
+
+
+def zpracuj_auto_vydaje(auto):
+    if auto.porizovaci_naklad:
+        typ, _ = TypVydaje.objects.get_or_create(nazev="Pořizovací náklad")
+        vydaj, _ = Vydaj.objects.get_or_create(
+            uzivatel=auto.uzivatel,
+            auto=auto,
+            typ=typ,
+            popis="Pořizovací náklad",
+            defaults={"datum": date.today(), "castka": auto.porizovaci_naklad},
+        )
+        if vydaj.castka != auto.porizovaci_naklad:
+            vydaj.castka = auto.porizovaci_naklad
+            vydaj.save()
+    else:
+        typ = TypVydaje.objects.filter(nazev="Pořizovací náklad").first()
+        if typ:
+            Vydaj.objects.filter(
+                uzivatel=auto.uzivatel,
+                auto=auto,
+                typ=typ,
+                popis="Pořizovací náklad",
+            ).delete()
+
+    if auto.operativni_leasing:
+        if auto.posledni_platba is None and auto.den_splatnosti:
+            today = date.today()
+            this_month_due = date(today.year, today.month, auto.den_splatnosti)
+            if today >= this_month_due:
+                auto.posledni_platba = this_month_due
+            else:
+                prev_year = today.year - 1 if today.month == 1 else today.year
+                prev_month = 12 if today.month == 1 else today.month - 1
+                last_day = monthrange(prev_year, prev_month)[1]
+                auto.posledni_platba = date(prev_year, prev_month, min(auto.den_splatnosti, last_day))
+            auto.save(update_fields=["posledni_platba"])
+    else:
+        auto.mesicni_platba = None
+        auto.den_splatnosti = None
+        auto.posledni_platba = None
+        auto.save(update_fields=["mesicni_platba", "den_splatnosti", "posledni_platba"])
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def seznam_vydaju(request):
+    generuj_leasingove_platby(request.user)
     # Zobrazíme pouze výdaje přihlášeného uživatele a aplikujeme filtry
     vydaje = Vydaj.objects.filter(uzivatel=request.user)
 
@@ -182,6 +256,7 @@ def prihlaseni(request):
 
 def home(request):
     if request.user.is_authenticated:
+        generuj_leasingove_platby(request.user)
         posledni_vydaje = Vydaj.objects.filter(uzivatel=request.user).order_by('-datum')[:5]
         celkove_vydaje = (
             Vydaj.objects.filter(uzivatel=request.user)
@@ -231,6 +306,7 @@ def pridat_auto(request):
             auto = form.save(commit=False)
             auto.uzivatel = request.user
             auto.save()
+            zpracuj_auto_vydaje(auto)
             return redirect('seznam_aut')
     else:
         form = AutoForm()
@@ -243,7 +319,8 @@ def upravit_auto(request, id):
     if request.method == 'POST':
         form = AutoForm(request.POST, instance=auto)
         if form.is_valid():
-            form.save()
+            auto = form.save()
+            zpracuj_auto_vydaje(auto)
             return redirect('seznam_aut')
     else:
         form = AutoForm(instance=auto)

@@ -6,6 +6,11 @@ class Auto(models.Model):
     uzivatel = models.ForeignKey(User, on_delete=models.CASCADE)  # Každé auto patří uživateli
     nazev = models.CharField(max_length=100)  # Např. "Škoda Octavia"
     spz = models.CharField(max_length=20, unique=True)  # Unikátní SPZ (volitelné)
+    porizovaci_naklad = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    operativni_leasing = models.BooleanField(default=False)
+    mesicni_platba = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    den_splatnosti = models.PositiveSmallIntegerField(null=True, blank=True)
+    posledni_platba = models.DateField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.nazev} ({self.spz})"
