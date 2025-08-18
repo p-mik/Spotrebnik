@@ -105,7 +105,14 @@ def seznam_vydaju(request):
         vydaje = vydaje.filter(datum__lte=do_param)
 
     sort_param = request.GET.get("sort", "-datum")
-    allowed_sorts = ["datum", "-datum", "castka", "-castka"]
+    allowed_sorts = [
+        "datum",
+        "-datum",
+        "castka",
+        "-castka",
+        "tachometr",
+        "-tachometr",
+    ]
     if sort_param not in allowed_sorts:
         sort_param = "-datum"
     vydaje = vydaje.order_by(sort_param)
@@ -151,7 +158,14 @@ def export_vydaje_csv(request):
         vydaje = vydaje.filter(datum__lte=do_param)
 
     sort_param = request.GET.get("sort", "-datum")
-    allowed_sorts = ["datum", "-datum", "castka", "-castka"]
+    allowed_sorts = [
+        "datum",
+        "-datum",
+        "castka",
+        "-castka",
+        "tachometr",
+        "-tachometr",
+    ]
     if sort_param not in allowed_sorts:
         sort_param = "-datum"
     vydaje = vydaje.order_by(sort_param)

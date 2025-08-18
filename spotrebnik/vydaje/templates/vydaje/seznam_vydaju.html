@@ -32,6 +32,8 @@
             <option value="datum" {% if request.GET.sort == 'datum' %}selected{% endif %}>Datum (vzestupně)</option>
             <option value="-castka" {% if request.GET.sort == '-castka' %}selected{% endif %}>Částka (sestupně)</option>
             <option value="castka" {% if request.GET.sort == 'castka' %}selected{% endif %}>Částka (vzestupně)</option>
+            <option value="-tachometr" {% if request.GET.sort == '-tachometr' %}selected{% endif %}>Tachometr (sestupně)</option>
+            <option value="tachometr" {% if request.GET.sort == 'tachometr' %}selected{% endif %}>Tachometr (vzestupně)</option>
         </select>
 
         <button type="submit">Filtrovat</button>
@@ -52,6 +54,7 @@
                     <th>Auto</th>
                     <th>Částka</th>
                     <th>Tachometr</th>
+                    <th>Nájezd od posledního tankování</th>
                     <th>Množství litrů</th>
                     <th>Cena za litr</th>
                     <th>Poznámka</th>
@@ -66,6 +69,7 @@
                     <td>{{ vydaj.auto }}</td>
                     <td>{{ vydaj.castka }} Kč</td>
                     <td>{{ vydaj.tachometr }}</td>
+                    <td>{{ vydaj.najezd_od_posledniho_tankovani|default:"-" }}</td>
                     <td>{{ vydaj.mnozstvi_litru|default:"-" }}</td>
                     <td>{{ vydaj.cena_za_litr|default:"-" }} Kč</td>
                     <td>{{ vydaj.popis|default:"-" }}</td>
