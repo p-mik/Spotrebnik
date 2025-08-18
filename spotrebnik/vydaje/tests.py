@@ -196,6 +196,32 @@ class TestAutoViews(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+class TestSeznamAutDisplay(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="user", password="pass")
+        self.auto1 = Auto.objects.create(
+            uzivatel=self.user,
+            nazev="Auto1",
+            spz="ABC123",
+            porizovaci_naklad=Decimal("100000"),
+        )
+        self.auto2 = Auto.objects.create(
+            uzivatel=self.user,
+            nazev="Auto2",
+            spz="XYZ789",
+            operativni_leasing=True,
+            mesicni_platba=Decimal("5000"),
+            den_splatnosti=20,
+        )
+
+    def test_list_displays_costs_and_leasing_info(self):
+        self.client.login(username="user", password="pass")
+        response = self.client.get(reverse("seznam_aut"))
+        self.assertContains(response, "100000.00 Kč")
+        self.assertContains(response, "5000.00 Kč")
+        self.assertContains(response, "20")
+
+
 class TestAutoNakladLeasing(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="user", password="pass")
