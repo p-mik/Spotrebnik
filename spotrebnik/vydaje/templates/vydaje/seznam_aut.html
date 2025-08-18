@@ -8,6 +8,9 @@
                 <tr>
                     <th>Název</th>
                     <th>SPZ</th>
+                    <th>Pořizovací náklad</th>
+                    <th>Měsíční platba</th>
+                    <th>Den platby</th>
                     <th>Akce</th>
                 </tr>
             </thead>
@@ -16,6 +19,25 @@
                 <tr>
                     <td>{{ auto.nazev }}</td>
                     <td>{{ auto.spz }}</td>
+                    <td>
+                        {% if auto.porizovaci_naklad %}
+                            {{ auto.porizovaci_naklad }} Kč
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if auto.operativni_leasing %}
+                            {% if auto.mesicni_platba %}
+                                {{ auto.mesicni_platba }} Kč
+                            {% else %}-{% endif %}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if auto.operativni_leasing %}
+                            {% if auto.den_splatnosti %}
+                                {{ auto.den_splatnosti }}
+                            {% else %}-{% endif %}
+                        {% else %}-{% endif %}
+                    </td>
                     <td>
                         <a href="{% url 'upravit_auto' auto.id %}">Upravit</a> |
                         <a href="{% url 'smazat_auto' auto.id %}">Smazat</a>
