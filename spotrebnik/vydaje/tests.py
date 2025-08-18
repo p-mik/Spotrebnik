@@ -87,6 +87,30 @@ class TestSeznamVydajuView(TestCase):
         response = self.client.get(reverse("seznam_vydaju"))
         self.assertContains(response, "Poznámka test")
 
+    def test_sort_by_tachometr(self):
+        Vydaj.objects.filter(uzivatel=self.user1).delete()
+        v1 = Vydaj.objects.create(
+            uzivatel=self.user1,
+            auto=self.auto1,
+            datum=date.today(),
+            typ=self.typ,
+            castka=100,
+            tachometr=1000,
+        )
+        v2 = Vydaj.objects.create(
+            uzivatel=self.user1,
+            auto=self.auto1,
+            datum=date.today(),
+            typ=self.typ,
+            castka=100,
+            tachometr=2000,
+        )
+        self.client.login(username="user1", password="pass")
+        response = self.client.get(reverse("seznam_vydaju"), {"sort": "-tachometr"})
+        vydaje = list(response.context["vydaje"])
+        self.assertEqual(vydaje[0], v2)
+        self.assertEqual(vydaje[1], v1)
+
 
 class TestPridatVydaj(TestCase):
     def setUp(self):
@@ -103,7 +127,7 @@ class TestPridatVydaj(TestCase):
             "castka": "100",
             "mnozstvi_litru": "10",
             "tachometr": "1000",
-            "najezd_od_posledniho_tankovani": "500",
+            "najezd_od_posledniho_tankovani": "500.5",
             "popis": "Test note",
         }
         response = self.client.post(reverse("pridat_vydaj"), data)
@@ -111,7 +135,9 @@ class TestPridatVydaj(TestCase):
         self.assertEqual(Vydaj.objects.filter(uzivatel=self.user).count(), 1)
         vydaj = Vydaj.objects.get(uzivatel=self.user)
         self.assertEqual(vydaj.cena_za_litr, Decimal("10"))
-        self.assertEqual(vydaj.najezd_od_posledniho_tankovani, 500)
+        self.assertEqual(
+            vydaj.najezd_od_posledniho_tankovani, Decimal("500.5")
+        )
         self.assertEqual(vydaj.popis, "Test note")
         self.assertEqual(vydaj.datum_pridani, date.today())
 
@@ -274,7 +300,7 @@ class TestExportVydajeCsv(TestCase):
             typ=self.typ,
             castka=Decimal("100"),
             tachometr=1000,
-            najezd_od_posledniho_tankovani=500,
+            najezd_od_posledniho_tankovani=Decimal("500.5"),
             popis="Test export",
         )
 
@@ -285,4 +311,4 @@ class TestExportVydajeCsv(TestCase):
         self.assertEqual(response["Content-Type"], "text/csv")
         content = response.content.decode()
         self.assertIn("Test export", content)
-        self.assertIn("500", content)
+        self.assertIn("500.5", content)

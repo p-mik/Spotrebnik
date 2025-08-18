@@ -30,7 +30,9 @@ class Vydaj(models.Model):
     castka = models.DecimalField(max_digits=10, decimal_places=2)
     popis = models.TextField(blank=True, null=True)
     tachometr = models.IntegerField(blank=True, null=True)
-    najezd_od_posledniho_tankovani = models.IntegerField(blank=True, null=True)
+    najezd_od_posledniho_tankovani = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
     mnozstvi_litru = models.FloatField(blank=True, null=True)
     cena_za_litr = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
