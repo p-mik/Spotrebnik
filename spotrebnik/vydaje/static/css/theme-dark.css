@@ -1,0 +1,31 @@
+:root {
+  --bg:#0F172A;        /* page background */
+  --surface:#111827;   /* karty/sekce */
+  --text:#E5E7EB;      /* primární text */
+  --muted:#9CA3AF;     /* sekundární text */
+  --accent:#F97316;    /* CTA / FAB / highlight */
+  --border:#334155;    /* hrany / děliče */
+  --radius:14px;       /* zaoblení */
+  --gap:24px;          /* základní mezera (8pt grid) */
+  --shadow:0 8px 24px rgb(0 0 0 / 30%);
+}
+html,body{height:100%}
+body{ background:var(--bg); color:var(--text); line-height:1.55; }
+a{ color:var(--text); }
+.navbar, .appbar{ background:#0B1224; border-bottom:1px solid var(--border); }
+.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:none; }
+.card + .card { margin-top: var(--gap); }
+.kpi{ display:flex; flex-direction:column; gap:8px; padding:20px 22px; border-radius:var(--radius); background:#0D1428; border:1px solid var(--border); }
+.kpi .kpi-label{ color:var(--muted); font-weight:600; font-size:0.95rem; }
+.kpi .kpi-value{ font-size:1.75rem; font-weight:700; letter-spacing:.2px; }
+.table{ color:var(--text); }
+.table thead th{ color:var(--muted); border-bottom:1px solid var(--border); }
+.table td, .table th{ border-color:var(--border); }
+.badge-accent{ background:var(--accent); color:#0F172A; }
+.btn-accent{ background:var(--accent); color:#0F172A; border:0; }
+.btn-accent:hover{ filter:brightness(1.1); }
+.fab{ position:fixed; right:24px; bottom:24px; width:56px; height:56px; border-radius:50%; background:var(--accent); color:#0F172A; border:0; box-shadow:var(--shadow); display:grid; place-items:center; font-size:24px; }
+.section-gap{ gap:var(--gap); }
+.list-item-actions i{ opacity:.8; cursor:pointer; }
+.list-item-actions i:hover{ opacity:1; }
+hr{ border-color:var(--border); }
