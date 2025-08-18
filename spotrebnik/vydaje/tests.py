@@ -193,3 +193,29 @@ class TestAutoViews(TestCase):
     def test_smazat_auto_requires_login(self):
         response = self.client.get(reverse("smazat_auto", args=[self.auto.id]))
         self.assertEqual(response.status_code, 302)
+
+
+class TestExportVydajeCsv(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="user", password="pass")
+        self.auto = Auto.objects.create(uzivatel=self.user, nazev="Auto", spz="ABC123")
+        self.typ, _ = TypVydaje.objects.get_or_create(nazev="Benzin")
+        Vydaj.objects.create(
+            uzivatel=self.user,
+            auto=self.auto,
+            datum=date.today(),
+            typ=self.typ,
+            castka=Decimal("100"),
+            tachometr=1000,
+            najezd_od_posledniho_tankovani=500,
+            popis="Test export",
+        )
+
+    def test_export_csv(self):
+        self.client.login(username="user", password="pass")
+        response = self.client.get(reverse("export_vydaje_csv"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        content = response.content.decode()
+        self.assertIn("Test export", content)
+        self.assertIn("500", content)
