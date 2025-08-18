@@ -29,7 +29,26 @@ class VydajForm(forms.ModelForm):
 class AutoForm(forms.ModelForm):
     class Meta:
         model = Auto
-        fields = ["nazev", "spz"]
+        fields = [
+            "nazev",
+            "spz",
+            "porizovaci_naklad",
+            "operativni_leasing",
+            "mesicni_platba",
+            "den_splatnosti",
+        ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("operativni_leasing"):
+            if not cleaned_data.get("mesicni_platba"):
+                self.add_error("mesicni_platba", "Zadej měsíční platbu")
+            if not cleaned_data.get("den_splatnosti"):
+                self.add_error("den_splatnosti", "Zadej den splatnosti")
+        else:
+            cleaned_data["mesicni_platba"] = None
+            cleaned_data["den_splatnosti"] = None
+        return cleaned_data
 
 
 class TypVydajeForm(forms.ModelForm):

@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .models import Auto, TypVydaje, Vydaj
+from .views import zpracuj_auto_vydaje
 
 
 class TestSeznamVydajuView(TestCase):
@@ -193,6 +194,46 @@ class TestAutoViews(TestCase):
     def test_smazat_auto_requires_login(self):
         response = self.client.get(reverse("smazat_auto", args=[self.auto.id]))
         self.assertEqual(response.status_code, 302)
+
+
+class TestAutoNakladLeasing(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="user", password="pass")
+
+    def test_porizovaci_naklad_vytvori_vydaj(self):
+        self.client.login(username="user", password="pass")
+        data = {
+            "nazev": "Auto",
+            "spz": "ABC",
+            "porizovaci_naklad": "1000",
+        }
+        self.client.post(reverse("pridat_auto"), data)
+        auto = Auto.objects.get(nazev="Auto")
+        typ = TypVydaje.objects.get(nazev="Pořizovací náklad")
+        self.assertTrue(
+            Vydaj.objects.filter(auto=auto, typ=typ, castka=Decimal("1000")).exists()
+        )
+
+    def test_generovani_leasingu(self):
+        auto = Auto.objects.create(
+            uzivatel=self.user,
+            nazev="Auto",
+            spz="ABC123",
+            operativni_leasing=True,
+            mesicni_platba=Decimal("200"),
+            den_splatnosti=date.today().day,
+        )
+        zpracuj_auto_vydaje(auto)
+        prev_year = date.today().year - 1 if date.today().month == 1 else date.today().year
+        prev_month = 12 if date.today().month == 1 else date.today().month - 1
+        auto.posledni_platba = date(prev_year, prev_month, auto.den_splatnosti)
+        auto.save()
+        self.client.login(username="user", password="pass")
+        self.client.get(reverse("seznam_vydaju"))
+        typ = TypVydaje.objects.get(nazev="Operativní leasing")
+        self.assertTrue(
+            Vydaj.objects.filter(auto=auto, typ=typ, castka=Decimal("200")).exists()
+        )
 
 
 class TestExportVydajeCsv(TestCase):
