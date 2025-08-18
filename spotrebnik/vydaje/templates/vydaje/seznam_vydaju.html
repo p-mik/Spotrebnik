@@ -48,6 +48,7 @@
                     <th>Tachometr</th>
                     <th>Množství litrů</th>
                     <th>Cena za litr</th>
+                    <th>Poznámka</th>
                     <th>Akce</th>
                 </tr>
             </thead>
@@ -61,6 +62,7 @@
                     <td>{{ vydaj.tachometr }}</td>
                     <td>{{ vydaj.mnozstvi_litru|default:"-" }}</td>
                     <td>{{ vydaj.cena_za_litr|default:"-" }} Kč</td>
+                    <td>{{ vydaj.popis|default:"-" }}</td>
                     <td>
                         <a href="{% url 'upravit_vydaj' vydaj.id %}">Upravit</a> |
                         <a href="{% url 'smazat_vydaj' vydaj.id %}">Smazat</a>

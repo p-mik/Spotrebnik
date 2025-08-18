@@ -79,6 +79,13 @@ class TestSeznamVydajuView(TestCase):
         response = self.client.get(reverse("seznam_vydaju"), {"od": date.today().isoformat()})
         self.assertEqual(list(response.context["vydaje"]), [self.vydaj1])
 
+    def test_note_displayed_in_list(self):
+        self.vydaj1.popis = "Poznámka test"
+        self.vydaj1.save()
+        self.client.login(username="user1", password="pass")
+        response = self.client.get(reverse("seznam_vydaju"))
+        self.assertContains(response, "Poznámka test")
+
 
 class TestPridatVydaj(TestCase):
     def setUp(self):
@@ -94,6 +101,8 @@ class TestPridatVydaj(TestCase):
             "datum": date.today().isoformat(),
             "castka": "100",
             "mnozstvi_litru": "10",
+            "tachometr": "1000",
+            "najezd_od_posledniho_tankovani": "500",
             "popis": "Test note",
         }
         response = self.client.post(reverse("pridat_vydaj"), data)
@@ -101,6 +110,7 @@ class TestPridatVydaj(TestCase):
         self.assertEqual(Vydaj.objects.filter(uzivatel=self.user).count(), 1)
         vydaj = Vydaj.objects.get(uzivatel=self.user)
         self.assertEqual(vydaj.cena_za_litr, Decimal("10"))
+        self.assertEqual(vydaj.najezd_od_posledniho_tankovani, 500)
         self.assertEqual(vydaj.popis, "Test note")
         self.assertEqual(vydaj.datum_pridani, date.today())
 
