@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from django.http import HttpResponse
 from .models import Auto, Vydaj, TypVydaje
 from .forms import AutoForm, VydajForm, RegistraceForm, TypVydajeForm
 from django.contrib.auth.decorators import login_required
@@ -6,6 +7,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum  # Importujeme Sum pro agregaci
 from django.core.paginator import Paginator
+import csv
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def seznam_vydaju(request):
@@ -52,6 +54,67 @@ def seznam_vydaju(request):
         "param_string": param_string,
     }
     return render(request, "vydaje/seznam_vydaju.html", context)
+
+
+@login_required
+def export_vydaje_csv(request):
+    vydaje = Vydaj.objects.filter(uzivatel=request.user)
+
+    typ_param = request.GET.get("typ")
+    if typ_param:
+        vydaje = vydaje.filter(typ_id=typ_param)
+
+    auto_param = request.GET.get("auto")
+    if auto_param:
+        vydaje = vydaje.filter(auto_id=auto_param)
+
+    od_param = request.GET.get("od")
+    if od_param:
+        vydaje = vydaje.filter(datum__gte=od_param)
+
+    do_param = request.GET.get("do")
+    if do_param:
+        vydaje = vydaje.filter(datum__lte=do_param)
+
+    sort_param = request.GET.get("sort", "-datum")
+    allowed_sorts = ["datum", "-datum", "castka", "-castka"]
+    if sort_param not in allowed_sorts:
+        sort_param = "-datum"
+    vydaje = vydaje.order_by(sort_param)
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = "attachment; filename=vydaje.csv"
+
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "Datum",
+            "Typ",
+            "Auto",
+            "Částka",
+            "Tachometr",
+            "Nájezd od posledního tankování",
+            "Množství litrů",
+            "Cena za litr",
+            "Poznámka",
+        ]
+    )
+    for v in vydaje:
+        writer.writerow(
+            [
+                v.datum,
+                v.typ.nazev,
+                v.auto.nazev,
+                v.castka,
+                v.tachometr,
+                v.najezd_od_posledniho_tankovani,
+                v.mnozstvi_litru,
+                v.cena_za_litr,
+                v.popis,
+            ]
+        )
+
+    return response
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def pridat_vydaj(request):

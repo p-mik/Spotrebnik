@@ -37,6 +37,12 @@
         <button type="submit">Filtrovat</button>
     </form>
 
+    <p>
+        <a href="{% url 'export_vydaje_csv' %}{% if param_string %}?{{ param_string }}{% endif %}">
+            Exportovat do CSV
+        </a>
+    </p>
+
     {% if vydaje %}
         <table border="1">
             <thead>

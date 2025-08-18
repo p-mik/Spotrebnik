@@ -16,6 +16,7 @@ from .views import (
     pridat_typ,
     upravit_typ,
     smazat_typ,
+    export_vydaje_csv,
 )
 
 urlpatterns = [
@@ -24,6 +25,7 @@ urlpatterns = [
     path('vydaje/pridat/', pridat_vydaj, name='pridat_vydaj'),
     path('vydaje/<int:id>/upravit/', upravit_vydaj, name='upravit_vydaj'),
     path('vydaje/<int:id>/smazat/', smazat_vydaj, name='smazat_vydaj'),
+    path('vydaje/export/', export_vydaje_csv, name='export_vydaje_csv'),
     path('auta/', seznam_aut, name='seznam_aut'),
     path('auta/pridat/', pridat_auto, name='pridat_auto'),
     path('auta/<int:id>/upravit/', upravit_auto, name='upravit_auto'),
