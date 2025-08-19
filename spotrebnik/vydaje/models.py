@@ -3,7 +3,11 @@ from django.contrib.auth.models import User  # Import uživatelského modelu
 from decimal import Decimal
 
 class Auto(models.Model):
-    uzivatel = models.ForeignKey(User, on_delete=models.CASCADE)  # Každé auto patří uživateli
+    uzivatel = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="auta",
+    )  # Každé auto patří uživateli
     nazev = models.CharField(max_length=100)  # Např. "Škoda Octavia"
     spz = models.CharField(max_length=20, unique=True)  # Unikátní SPZ (volitelné)
     porizovaci_naklad = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -22,7 +26,11 @@ class TypVydaje(models.Model):
         return self.nazev
 
 class Vydaj(models.Model):
-    uzivatel = models.ForeignKey(User, on_delete=models.CASCADE)  # Každý výdaj patří uživateli
+    uzivatel = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="vydaje",
+    )  # Každý výdaj patří uživateli
     auto = models.ForeignKey(Auto, on_delete=models.CASCADE)  # Výdaj se váže ke konkrétnímu autu
     datum = models.DateField()
     datum_pridani = models.DateField(auto_now_add=True, null=True, blank=True)

@@ -382,3 +382,21 @@ class TestLeasingGenerationRemoval(TestCase):
         self.client.get(reverse("seznam_vydaju"))
         self.client.get(reverse("home"))
         self.assertEqual(Vydaj.objects.count(), 0)
+
+
+class TestRelatedNames(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="rel", password="pass")
+        self.auto = Auto.objects.create(uzivatel=self.user, nazev="RelAuto", spz="REL123")
+        self.typ, _ = TypVydaje.objects.get_or_create(nazev="RelTyp")
+        self.vydaj = Vydaj.objects.create(
+            uzivatel=self.user,
+            auto=self.auto,
+            datum=date.today(),
+            typ=self.typ,
+            castka=Decimal("10"),
+        )
+
+    def test_user_related_managers(self):
+        self.assertIn(self.auto, self.user.auta.all())
+        self.assertIn(self.vydaj, self.user.vydaje.all())
