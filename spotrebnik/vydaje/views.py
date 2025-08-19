@@ -11,6 +11,8 @@ from datetime import date
 from calendar import monthrange
 import csv
 
+from .services import filter_vydaje
+
 
 def _next_month(d, day):
     year = d.year + (1 if d.month == 12 else 0)
@@ -86,36 +88,7 @@ def zpracuj_auto_vydaje(auto):
 def seznam_vydaju(request):
     generuj_leasingove_platby(request.user)
     # Zobrazíme pouze výdaje přihlášeného uživatele a aplikujeme filtry
-    vydaje = Vydaj.objects.filter(uzivatel=request.user)
-
-    typ_param = request.GET.get("typ")
-    if typ_param:
-        vydaje = vydaje.filter(typ_id=typ_param)
-
-    auto_param = request.GET.get("auto")
-    if auto_param:
-        vydaje = vydaje.filter(auto_id=auto_param)
-
-    od_param = request.GET.get("od")
-    if od_param:
-        vydaje = vydaje.filter(datum__gte=od_param)
-
-    do_param = request.GET.get("do")
-    if do_param:
-        vydaje = vydaje.filter(datum__lte=do_param)
-
-    sort_param = request.GET.get("sort", "-datum")
-    allowed_sorts = [
-        "datum",
-        "-datum",
-        "castka",
-        "-castka",
-        "tachometr",
-        "-tachometr",
-    ]
-    if sort_param not in allowed_sorts:
-        sort_param = "-datum"
-    vydaje = vydaje.order_by(sort_param)
+    vydaje = filter_vydaje(request)
 
     paginator = Paginator(vydaje, 10)
     page_number = request.GET.get("page")
@@ -139,36 +112,7 @@ def seznam_vydaju(request):
 
 @login_required
 def export_vydaje_csv(request):
-    vydaje = Vydaj.objects.filter(uzivatel=request.user)
-
-    typ_param = request.GET.get("typ")
-    if typ_param:
-        vydaje = vydaje.filter(typ_id=typ_param)
-
-    auto_param = request.GET.get("auto")
-    if auto_param:
-        vydaje = vydaje.filter(auto_id=auto_param)
-
-    od_param = request.GET.get("od")
-    if od_param:
-        vydaje = vydaje.filter(datum__gte=od_param)
-
-    do_param = request.GET.get("do")
-    if do_param:
-        vydaje = vydaje.filter(datum__lte=do_param)
-
-    sort_param = request.GET.get("sort", "-datum")
-    allowed_sorts = [
-        "datum",
-        "-datum",
-        "castka",
-        "-castka",
-        "tachometr",
-        "-tachometr",
-    ]
-    if sort_param not in allowed_sorts:
-        sort_param = "-datum"
-    vydaje = vydaje.order_by(sort_param)
+    vydaje = filter_vydaje(request)
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = "attachment; filename=vydaje.csv"
