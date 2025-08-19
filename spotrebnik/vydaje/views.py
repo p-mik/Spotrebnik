@@ -5,7 +5,7 @@ from .forms import AutoForm, VydajForm, RegistraceForm, TypVydajeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import Sum  # Importujeme Sum pro agregaci
+from django.db.models import Sum, Avg, Min  # Importujeme agregace
 from django.core.paginator import Paginator
 from datetime import date
 from calendar import monthrange
@@ -271,18 +271,33 @@ def prihlaseni(request):
 def home(request):
     if request.user.is_authenticated:
         generuj_leasingove_platby(request.user)
+        dnes = date.today()
         posledni_vydaje = Vydaj.objects.filter(uzivatel=request.user).order_by('-datum')[:5]
-        celkove_vydaje = (
-            Vydaj.objects.filter(uzivatel=request.user)
+        min_vydaje_mesic = (
+            Vydaj.objects.filter(
+                uzivatel=request.user, datum__year=dnes.year, datum__month=dnes.month
+            )
+            .aggregate(min_castka=Min('castka'))['min_castka']
+            or 0
+        )
+        prumerna_cena = (
+            Vydaj.objects.filter(
+                uzivatel=request.user, cena_za_litr__isnull=False
+            )
+            .aggregate(prumer=Avg('cena_za_litr'))['prumer']
+            or 0
+        )
+        celkem_rok = (
+            Vydaj.objects.filter(uzivatel=request.user, datum__year=dnes.year)
             .aggregate(celkova_castka=Sum('castka'))['celkova_castka']
             or 0
         )
-        souhrn_podle_aut = (
+        souhrn_aut = (
             Vydaj.objects.filter(uzivatel=request.user)
             .values('auto__nazev')
             .annotate(celkova_castka=Sum('castka'))
         )
-        souhrn_podle_typu = (
+        souhrn_typu = (
             Vydaj.objects.filter(uzivatel=request.user)
             .values('typ__nazev')
             .annotate(celkova_castka=Sum('castka'))
@@ -292,9 +307,11 @@ def home(request):
             'home.html',
             {
                 'posledni_vydaje': posledni_vydaje,
-                'celkove_vydaje': celkove_vydaje,
-                'souhrn_podle_aut': souhrn_podle_aut,
-                'souhrn_podle_typu': souhrn_podle_typu,
+                'min_vydaje_mesic': min_vydaje_mesic,
+                'prumerna_cena': prumerna_cena,
+                'celkem_rok': celkem_rok,
+                'souhrn_aut': souhrn_aut,
+                'souhrn_typu': souhrn_typu,
             },
         )
     return render(request, 'home.html')

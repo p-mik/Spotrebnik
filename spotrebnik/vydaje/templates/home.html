@@ -20,7 +20,7 @@
           {% for z in posledni_vydaje %}
           <li class="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
             <div>
-              <div class="fw-semibold">{{ z.date|date:"M j, Y" }} – {{ z.amount }} Kč</div>
+              <div class="fw-semibold">{{ z.datum|date:"M j, Y" }} – {{ z.castka }} Kč</div>
               <div class="text-secondary small">{{ z.typ }} · {{ z.auto }}</div>
             </div>
             <div class="list-item-actions d-flex gap-3">
@@ -41,7 +41,7 @@
           <thead><tr><th>Auto</th><th class="text-end">Celkem</th></tr></thead>
           <tbody>
             {% for r in souhrn_aut %}
-              <tr><td>{{ r.auto }}</td><td class="text-end">{{ r.celkem }} Kč</td></tr>
+              <tr><td>{{ r.auto__nazev }}</td><td class="text-end">{{ r.celkova_castka }} Kč</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -52,7 +52,7 @@
           <thead><tr><th>Typ</th><th class="text-end">Celkem</th></tr></thead>
           <tbody>
             {% for r in souhrn_typu %}
-              <tr><td>{{ r.typ }}</td><td class="text-end">{{ r.celkem }} Kč</td></tr>
+              <tr><td>{{ r.typ__nazev }}</td><td class="text-end">{{ r.celkova_castka }} Kč</td></tr>
             {% endfor %}
           </tbody>
         </table>
