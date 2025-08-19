@@ -29,8 +29,13 @@
           <li class="nav-item"><a class="nav-link text-light" href="{% url 'seznam_typu' %}">Typy</a></li>
         </ul>
         <div class="d-flex align-items-center gap-3">
-          <span class="text-secondary d-none d-md-inline">Petr</span>
-          <a class="btn btn-sm btn-outline-light" href="{% url 'odhlaseni' %}">Odhlásit se</a>
+          {% if user.is_authenticated %}
+            <span class="text-secondary d-none d-md-inline">{{ user.username }}</span>
+            <a class="btn btn-sm btn-outline-light" href="{% url 'odhlaseni' %}">Odhlásit se</a>
+          {% else %}
+            <a class="text-light" href="{% url 'prihlaseni' %}">Přihlásit</a>
+            <a class="text-light" href="{% url 'registrace' %}">Registrace</a>
+          {% endif %}
         </div>
       </div>
     </div>

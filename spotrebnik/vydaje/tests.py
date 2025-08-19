@@ -343,3 +343,22 @@ class TestHomeView(TestCase):
         self.assertEqual(response.context["min_vydaje_mesic"], Decimal("50"))
         self.assertEqual(response.context["celkem_rok"], Decimal("150"))
         self.assertEqual(response.context["prumerna_cena"], Decimal("10"))
+
+
+class TestNavigation(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="navuser", password="pass")
+
+    def test_navigation_authenticated(self):
+        self.client.login(username="navuser", password="pass")
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Odhlásit se")
+        self.assertContains(response, "navuser")
+        self.assertNotContains(response, "Přihlásit")
+        self.assertNotContains(response, "Registrace")
+
+    def test_navigation_anonymous(self):
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Přihlásit")
+        self.assertContains(response, "Registrace")
+        self.assertNotContains(response, "Odhlásit se")
