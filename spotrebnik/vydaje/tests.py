@@ -312,3 +312,34 @@ class TestExportVydajeCsv(TestCase):
         content = response.content.decode()
         self.assertIn("Test export", content)
         self.assertIn("500.5", content)
+
+
+class TestHomeView(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="home", password="pass")
+        self.typ, _ = TypVydaje.objects.get_or_create(nazev="Benzin")
+        self.auto = Auto.objects.create(uzivatel=self.user, nazev="Auto", spz="AAA111")
+        Vydaj.objects.create(
+            uzivatel=self.user,
+            auto=self.auto,
+            datum=date.today(),
+            typ=self.typ,
+            castka=Decimal("100"),
+            mnozstvi_litru=10,
+        )
+        Vydaj.objects.create(
+            uzivatel=self.user,
+            auto=self.auto,
+            datum=date.today(),
+            typ=self.typ,
+            castka=Decimal("50"),
+            mnozstvi_litru=5,
+        )
+
+    def test_home_context_values(self):
+        self.client.login(username="home", password="pass")
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["min_vydaje_mesic"], Decimal("50"))
+        self.assertEqual(response.context["celkem_rok"], Decimal("150"))
+        self.assertEqual(response.context["prumerna_cena"], Decimal("10"))
