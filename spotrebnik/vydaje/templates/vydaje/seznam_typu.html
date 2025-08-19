@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Seznam typů výdajů</h1>
     <p><a href="{% url 'pridat_typ' %}">Přidat nový typ</a></p>
-    {% if typy %}
+    {% if object_list %}
         <table border="1">
             <thead>
                 <tr>
@@ -12,7 +12,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for typ in typy %}
+                {% for typ in object_list %}
                 <tr>
                     <td>{{ typ.nazev }}</td>
                     <td>

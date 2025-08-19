@@ -54,7 +54,7 @@ class TestSeznamVydajuView(TestCase):
         )
         self.client.login(username="user1", password="pass")
         response = self.client.get(reverse("seznam_vydaju"), {"typ": typ2.id})
-        self.assertEqual(list(response.context["vydaje"]), [vydaj_novy])
+        self.assertEqual(list(response.context["object_list"]), [vydaj_novy])
 
     def test_filter_by_auto(self):
         auto_jine = Auto.objects.create(uzivatel=self.user1, nazev="Auto3", spz="DEF456")
@@ -67,7 +67,7 @@ class TestSeznamVydajuView(TestCase):
         )
         self.client.login(username="user1", password="pass")
         response = self.client.get(reverse("seznam_vydaju"), {"auto": auto_jine.id})
-        self.assertEqual(list(response.context["vydaje"]), [vydaj_auto])
+        self.assertEqual(list(response.context["object_list"]), [vydaj_auto])
 
     def test_filter_by_date_range(self):
         Vydaj.objects.create(
@@ -79,7 +79,7 @@ class TestSeznamVydajuView(TestCase):
         )
         self.client.login(username="user1", password="pass")
         response = self.client.get(reverse("seznam_vydaju"), {"od": date.today().isoformat()})
-        self.assertEqual(list(response.context["vydaje"]), [self.vydaj1])
+        self.assertEqual(list(response.context["object_list"]), [self.vydaj1])
 
     def test_note_displayed_in_list(self):
         self.vydaj1.popis = "Poznámka test"
@@ -108,7 +108,7 @@ class TestSeznamVydajuView(TestCase):
         )
         self.client.login(username="user1", password="pass")
         response = self.client.get(reverse("seznam_vydaju"), {"sort": "-tachometr"})
-        vydaje = list(response.context["vydaje"])
+        vydaje = list(response.context["object_list"])
         self.assertEqual(vydaje[0], v2)
         self.assertEqual(vydaje[1], v1)
 

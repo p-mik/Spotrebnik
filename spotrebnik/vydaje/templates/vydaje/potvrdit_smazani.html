@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Smazat výdaj{% endblock %}
 {% block content %}
-    <h1>Opravdu chceš smazat výdaj {{ vydaj }}?</h1>
+    <h1>Opravdu chceš smazat výdaj {{ object }}?</h1>
     <form method="post">
         {% csrf_token %}
         <button type="submit">Ano, smazat</button>
