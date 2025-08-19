@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Auto, Vydaj, TypVydaje
 from .forms import AutoForm, VydajForm, RegistraceForm, TypVydajeForm
@@ -6,7 +6,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum, Avg, Min  # Importujeme agregace
-from django.core.paginator import Paginator
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 from datetime import date
 from calendar import monthrange
 import csv
@@ -54,30 +56,133 @@ def zpracuj_auto_vydaje(auto):
         auto.den_splatnosti = None
         auto.posledni_platba = None
         auto.save(update_fields=["mesicni_platba", "den_splatnosti", "posledni_platba"])
+class VydajListView(LoginRequiredMixin, ListView):
+    model = Vydaj
+    template_name = "vydaje/seznam_vydaju.html"
+    paginate_by = 10
 
-@login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
-def seznam_vydaju(request):
-    # Zobrazíme pouze výdaje přihlášeného uživatele a aplikujeme filtry
-    vydaje = filter_vydaje(request)
+    def get_queryset(self):
+        return filter_vydaje(self.request)
 
-    paginator = Paginator(vydaje, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        params = self.request.GET.copy()
+        if "page" in params:
+            params.pop("page")
+        context["typy"] = TypVydaje.objects.all()
+        context["auta"] = Auto.objects.filter(uzivatel=self.request.user)
+        context["param_string"] = params.urlencode()
+        return context
 
-    params = request.GET.copy()
-    if "page" in params:
-        params.pop("page")
-    param_string = params.urlencode()
 
-    context = {
-        "vydaje": page_obj,
-        "page_obj": page_obj,
-        "paginator": paginator,
-        "typy": TypVydaje.objects.all(),
-        "auta": Auto.objects.filter(uzivatel=request.user),
-        "param_string": param_string,
-    }
-    return render(request, "vydaje/seznam_vydaju.html", context)
+class VydajCreateView(LoginRequiredMixin, CreateView):
+    model = Vydaj
+    form_class = VydajForm
+    template_name = "vydaje/pridat_vydaj.html"
+    success_url = reverse_lazy("seznam_vydaju")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.uzivatel = self.request.user
+        return super().form_valid(form)
+
+
+class VydajUpdateView(LoginRequiredMixin, UpdateView):
+    model = Vydaj
+    form_class = VydajForm
+    template_name = "vydaje/upravit_vydaj.html"
+    success_url = reverse_lazy("seznam_vydaju")
+
+    def get_queryset(self):
+        return Vydaj.objects.filter(uzivatel=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+
+class VydajDeleteView(LoginRequiredMixin, DeleteView):
+    model = Vydaj
+    template_name = "vydaje/potvrdit_smazani.html"
+    success_url = reverse_lazy("seznam_vydaju")
+
+    def get_queryset(self):
+        return Vydaj.objects.filter(uzivatel=self.request.user)
+
+
+class AutoListView(LoginRequiredMixin, ListView):
+    model = Auto
+    template_name = "vydaje/seznam_aut.html"
+
+    def get_queryset(self):
+        return Auto.objects.filter(uzivatel=self.request.user)
+
+
+class AutoCreateView(LoginRequiredMixin, CreateView):
+    model = Auto
+    form_class = AutoForm
+    template_name = "vydaje/pridat_auto.html"
+    success_url = reverse_lazy("seznam_aut")
+
+    def form_valid(self, form):
+        form.instance.uzivatel = self.request.user
+        response = super().form_valid(form)
+        zpracuj_auto_vydaje(self.object)
+        return response
+
+
+class AutoUpdateView(LoginRequiredMixin, UpdateView):
+    model = Auto
+    form_class = AutoForm
+    template_name = "vydaje/upravit_auto.html"
+    success_url = reverse_lazy("seznam_aut")
+
+    def get_queryset(self):
+        return Auto.objects.filter(uzivatel=self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        zpracuj_auto_vydaje(self.object)
+        return response
+
+
+class AutoDeleteView(LoginRequiredMixin, DeleteView):
+    model = Auto
+    template_name = "vydaje/smazat_auto.html"
+    success_url = reverse_lazy("seznam_aut")
+
+    def get_queryset(self):
+        return Auto.objects.filter(uzivatel=self.request.user)
+
+
+class TypVydajeListView(LoginRequiredMixin, ListView):
+    model = TypVydaje
+    template_name = "vydaje/seznam_typu.html"
+
+
+class TypVydajeCreateView(LoginRequiredMixin, CreateView):
+    model = TypVydaje
+    form_class = TypVydajeForm
+    template_name = "vydaje/pridat_typ.html"
+    success_url = reverse_lazy("seznam_typu")
+
+
+class TypVydajeUpdateView(LoginRequiredMixin, UpdateView):
+    model = TypVydaje
+    form_class = TypVydajeForm
+    template_name = "vydaje/upravit_typ.html"
+    success_url = reverse_lazy("seznam_typu")
+
+
+class TypVydajeDeleteView(LoginRequiredMixin, DeleteView):
+    model = TypVydaje
+    template_name = "vydaje/smazat_typ.html"
+    success_url = reverse_lazy("seznam_typu")
 
 
 @login_required
@@ -118,41 +223,6 @@ def export_vydaje_csv(request):
 
     return response
 
-@login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
-def pridat_vydaj(request):
-    if request.method == "POST":
-        form = VydajForm(request.POST, user=request.user)
-        if form.is_valid():
-            vydaj = form.save(commit=False)  # Neuložíme hned
-            vydaj.uzivatel = request.user  # Přiřadíme aktuálního uživatele
-            vydaj.save()  # Teprve teď uložíme
-            return redirect('seznam_vydaju')
-    else:
-        form = VydajForm(user=request.user)
-
-    return render(request, 'vydaje/pridat_vydaj.html', {'form': form})
-
-
-@login_required
-def upravit_vydaj(request, id):
-    vydaj = get_object_or_404(Vydaj, id=id, uzivatel=request.user)
-    if request.method == 'POST':
-        form = VydajForm(request.POST, instance=vydaj, user=request.user)
-        if form.is_valid():
-            form.save()
-            return redirect('seznam_vydaju')
-    else:
-        form = VydajForm(instance=vydaj, user=request.user)
-    return render(request, 'vydaje/upravit_vydaj.html', {'form': form})
-
-
-@login_required
-def smazat_vydaj(request, id):
-    vydaj = get_object_or_404(Vydaj, id=id, uzivatel=request.user)
-    if request.method == 'POST':
-        vydaj.delete()
-        return redirect('seznam_vydaju')
-    return render(request, 'vydaje/potvrdit_smazani.html', {'vydaj': vydaj})
 
 def registrace(request):
     if request.method == "POST":
@@ -234,87 +304,3 @@ def home(request):
 def odhlaseni(request):
     logout(request)
     return redirect('home')
-
-
-@login_required
-def seznam_aut(request):
-    auta = Auto.objects.filter(uzivatel=request.user)
-    return render(request, 'vydaje/seznam_aut.html', {'auta': auta})
-
-
-@login_required
-def pridat_auto(request):
-    if request.method == 'POST':
-        form = AutoForm(request.POST)
-        if form.is_valid():
-            auto = form.save(commit=False)
-            auto.uzivatel = request.user
-            auto.save()
-            zpracuj_auto_vydaje(auto)
-            return redirect('seznam_aut')
-    else:
-        form = AutoForm()
-    return render(request, 'vydaje/pridat_auto.html', {'form': form})
-
-
-@login_required
-def upravit_auto(request, id):
-    auto = get_object_or_404(Auto, id=id, uzivatel=request.user)
-    if request.method == 'POST':
-        form = AutoForm(request.POST, instance=auto)
-        if form.is_valid():
-            auto = form.save()
-            zpracuj_auto_vydaje(auto)
-            return redirect('seznam_aut')
-    else:
-        form = AutoForm(instance=auto)
-    return render(request, 'vydaje/upravit_auto.html', {'form': form})
-
-
-@login_required
-def smazat_auto(request, id):
-    auto = get_object_or_404(Auto, id=id, uzivatel=request.user)
-    if request.method == 'POST':
-        auto.delete()
-        return redirect('seznam_aut')
-    return render(request, 'vydaje/smazat_auto.html', {'auto': auto})
-
-
-@login_required
-def seznam_typu(request):
-    typy = TypVydaje.objects.all()
-    return render(request, 'vydaje/seznam_typu.html', {'typy': typy})
-
-
-@login_required
-def pridat_typ(request):
-    if request.method == 'POST':
-        form = TypVydajeForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('seznam_typu')
-    else:
-        form = TypVydajeForm()
-    return render(request, 'vydaje/pridat_typ.html', {'form': form})
-
-
-@login_required
-def upravit_typ(request, id):
-    typ = get_object_or_404(TypVydaje, id=id)
-    if request.method == 'POST':
-        form = TypVydajeForm(request.POST, instance=typ)
-        if form.is_valid():
-            form.save()
-            return redirect('seznam_typu')
-    else:
-        form = TypVydajeForm(instance=typ)
-    return render(request, 'vydaje/upravit_typ.html', {'form': form})
-
-
-@login_required
-def smazat_typ(request, id):
-    typ = get_object_or_404(TypVydaje, id=id)
-    if request.method == 'POST':
-        typ.delete()
-        return redirect('seznam_typu')
-    return render(request, 'vydaje/smazat_typ.html', {'typ': typ})

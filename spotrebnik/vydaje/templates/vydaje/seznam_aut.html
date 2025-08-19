@@ -2,7 +2,7 @@
 {% block title %}Seznam aut{% endblock %}
 {% block content %}
     <h1>Seznam aut</h1>
-    {% if auta %}
+    {% if object_list %}
         <table border="1">
             <thead>
                 <tr>
@@ -15,7 +15,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for auto in auta %}
+                {% for auto in object_list %}
                 <tr>
                     <td>{{ auto.nazev }}</td>
                     <td>{{ auto.spz }}</td>
