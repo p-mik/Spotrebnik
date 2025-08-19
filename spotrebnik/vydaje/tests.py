@@ -344,6 +344,11 @@ class TestHomeView(TestCase):
         self.assertEqual(response.context["celkem_rok"], Decimal("150"))
         self.assertEqual(response.context["prumerna_cena"], Decimal("10"))
 
+    def test_prumerna_cena_format(self):
+        self.client.login(username="home", password="pass")
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "10.00")
+
 
 class TestNavigation(TestCase):
     def setUp(self):

@@ -6,7 +6,7 @@
       {% include 'components/_kpi.html' with label='Min. výdaje tento měsíc' value=min_vydaje_mesic %}
     </div>
     <div class="col-12 col-md-4">
-      {% include 'components/_kpi.html' with label='Průměrná cena / l' value=prumerna_cena %}
+      {% include 'components/_kpi.html' with label='Průměrná cena / l' value=prumerna_cena|floatformat:2 %}
     </div>
     <div class="col-12 col-md-4">
       {% include 'components/_kpi.html' with label='Celkem letos' value=celkem_rok %}
