@@ -3,7 +3,7 @@ from .models import Vydaj
 
 def filter_vydaje(request):
     """Return user's expenses filtered and sorted based on query parameters."""
-    vydaje = Vydaj.objects.filter(uzivatel=request.user)
+    vydaje = Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user)
 
     typ_param = request.GET.get("typ")
     if typ_param:
