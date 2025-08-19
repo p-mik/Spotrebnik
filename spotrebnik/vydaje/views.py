@@ -14,35 +14,6 @@ import csv
 from .services import filter_vydaje
 
 
-def _next_month(d, day):
-    year = d.year + (1 if d.month == 12 else 0)
-    month = 1 if d.month == 12 else d.month + 1
-    last_day = monthrange(year, month)[1]
-    return date(year, month, min(day, last_day))
-
-
-def generuj_leasingove_platby(user):
-    typ, _ = TypVydaje.objects.get_or_create(nazev="Operativní leasing")
-    today = date.today()
-    for auto in Auto.objects.filter(uzivatel=user, operativni_leasing=True):
-        due = auto.posledni_platba
-        if due is None:
-            continue
-        next_due = _next_month(due, auto.den_splatnosti)
-        while next_due <= today:
-            Vydaj.objects.create(
-                uzivatel=user,
-                auto=auto,
-                datum=next_due,
-                typ=typ,
-                castka=auto.mesicni_platba,
-                popis="Operativní leasing",
-            )
-            auto.posledni_platba = next_due
-            auto.save(update_fields=["posledni_platba"])
-            next_due = _next_month(next_due, auto.den_splatnosti)
-
-
 def zpracuj_auto_vydaje(auto):
     if auto.porizovaci_naklad:
         typ, _ = TypVydaje.objects.get_or_create(nazev="Pořizovací náklad")
@@ -59,7 +30,7 @@ def zpracuj_auto_vydaje(auto):
     else:
         typ = TypVydaje.objects.filter(nazev="Pořizovací náklad").first()
         if typ:
-            Vydaj.objects.filter(
+            Vydaj.objects.select_related('auto', 'typ').filter(
                 uzivatel=auto.uzivatel,
                 auto=auto,
                 typ=typ,
@@ -86,7 +57,6 @@ def zpracuj_auto_vydaje(auto):
 
 @login_required  # Zajistí, že stránka bude přístupná jen přihlášeným uživatelům
 def seznam_vydaju(request):
-    generuj_leasingove_platby(request.user)
     # Zobrazíme pouze výdaje přihlášeného uživatele a aplikujeme filtry
     vydaje = filter_vydaje(request)
 
@@ -214,35 +184,34 @@ def prihlaseni(request):
 
 def home(request):
     if request.user.is_authenticated:
-        generuj_leasingove_platby(request.user)
         dnes = date.today()
-        posledni_vydaje = Vydaj.objects.filter(uzivatel=request.user).order_by('-datum')[:5]
+        posledni_vydaje = Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user).order_by('-datum')[:5]
         min_vydaje_mesic = (
-            Vydaj.objects.filter(
+            Vydaj.objects.select_related('auto', 'typ').filter(
                 uzivatel=request.user, datum__year=dnes.year, datum__month=dnes.month
             )
             .aggregate(min_castka=Min('castka'))['min_castka']
             or 0
         )
         prumerna_cena = (
-            Vydaj.objects.filter(
+            Vydaj.objects.select_related('auto', 'typ').filter(
                 uzivatel=request.user, cena_za_litr__isnull=False
             )
             .aggregate(prumer=Avg('cena_za_litr'))['prumer']
             or 0
         )
         celkem_rok = (
-            Vydaj.objects.filter(uzivatel=request.user, datum__year=dnes.year)
+            Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user, datum__year=dnes.year)
             .aggregate(celkova_castka=Sum('castka'))['celkova_castka']
             or 0
         )
         souhrn_aut = (
-            Vydaj.objects.filter(uzivatel=request.user)
+            Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user)
             .values('auto__nazev')
             .annotate(celkova_castka=Sum('castka'))
         )
         souhrn_typu = (
-            Vydaj.objects.filter(uzivatel=request.user)
+            Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user)
             .values('typ__nazev')
             .annotate(celkova_castka=Sum('castka'))
         )

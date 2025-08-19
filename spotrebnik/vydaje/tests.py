@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.core.management import call_command
 
 from .models import Auto, TypVydaje, Vydaj
 from .views import zpracuj_auto_vydaje
@@ -280,8 +281,7 @@ class TestAutoNakladLeasing(TestCase):
         prev_month = 12 if date.today().month == 1 else date.today().month - 1
         auto.posledni_platba = date(prev_year, prev_month, auto.den_splatnosti)
         auto.save()
-        self.client.login(username="user", password="pass")
-        self.client.get(reverse("seznam_vydaju"))
+        call_command("generuj_leasingy")
         typ = TypVydaje.objects.get(nazev="Operativní leasing")
         self.assertTrue(
             Vydaj.objects.filter(auto=auto, typ=typ, castka=Decimal("200")).exists()
@@ -362,3 +362,23 @@ class TestNavigation(TestCase):
         self.assertContains(response, "Přihlásit")
         self.assertContains(response, "Registrace")
         self.assertNotContains(response, "Odhlásit se")
+
+
+class TestLeasingGenerationRemoval(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="les", password="pass")
+        self.auto = Auto.objects.create(
+            uzivatel=self.user,
+            nazev="Auto",
+            spz="XYZ",
+            operativni_leasing=True,
+            mesicni_platba=Decimal("100"),
+            den_splatnosti=1,
+            posledni_platba=date(2020,1,1),
+        )
+
+    def test_views_do_not_generate_leasing(self):
+        self.client.login(username="les", password="pass")
+        self.client.get(reverse("seznam_vydaju"))
+        self.client.get(reverse("home"))
+        self.assertEqual(Vydaj.objects.count(), 0)
