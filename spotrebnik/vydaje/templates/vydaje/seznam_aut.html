@@ -2,6 +2,7 @@
 {% block title %}Seznam aut{% endblock %}
 {% block content %}
     <h1>Seznam aut</h1>
+    <p><a href="{% url 'pridat_auto' %}">Přidat nové auto</a></p>
     {% if object_list %}
         <table border="1">
             <thead>
