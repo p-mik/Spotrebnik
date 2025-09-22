@@ -1,0 +1,329 @@
+:root {
+  --color-background: #f5f6fa;
+  --color-surface: #ffffff;
+  --color-text: #1f2933;
+  --color-muted: #6b7280;
+  --color-primary: #2a9d8f;
+  --color-primary-dark: #23867b;
+  --color-border: #e1e7f0;
+  --shadow-soft: 0 16px 40px rgb(15 23 42 / 10%);
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --gap: 24px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover,
+a:focus {
+  color: var(--color-primary-dark);
+}
+
+main.container {
+  padding-block: 2rem 3rem;
+}
+
+.section-gap {
+  gap: var(--gap);
+}
+
+/* Navigation */
+.appbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
+  padding-block: 0.35rem;
+}
+
+.appbar .navbar-brand {
+  font-weight: 700;
+  color: var(--color-text);
+  transition: color 0.2s ease;
+}
+
+.appbar .navbar-brand span {
+  color: var(--color-primary);
+}
+
+.appbar .navbar-brand:hover,
+.appbar .navbar-brand:focus {
+  color: var(--color-primary);
+}
+
+.appbar .navbar-nav .nav-link {
+  color: var(--color-muted);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  border-radius: var(--radius-md);
+}
+
+.appbar .navbar-nav .nav-link:hover,
+.appbar .navbar-nav .nav-link:focus {
+  color: var(--color-primary);
+  background: rgba(42, 157, 143, 0.08);
+}
+
+.appbar .navbar-nav .nav-link.active {
+  color: var(--color-primary);
+  background: rgba(42, 157, 143, 0.1);
+}
+
+.appbar .navbar-toggler {
+  border: none;
+  padding: 0.35rem 0.5rem;
+}
+
+.appbar .navbar-toggler:focus {
+  box-shadow: none;
+}
+
+/* Cards */
+.card {
+  background: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 1.75rem;
+}
+
+.card h5 {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.card + .card {
+  margin-top: var(--gap);
+}
+
+/* KPI blocks */
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.kpi-label {
+  color: var(--color-muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* Lists */
+.list-group {
+  --bs-list-group-bg: transparent;
+  --bs-list-group-border-color: transparent;
+  --bs-list-group-border-width: 0;
+}
+
+.list-group-item {
+  background: transparent;
+  border: none;
+  padding: 0.75rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.list-group-item + .list-group-item {
+  border-top: 1px solid var(--color-border);
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+}
+
+.list-item-actions a {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.list-item-actions a:hover {
+  color: var(--color-primary);
+}
+
+/* Tables */
+.table {
+  --bs-table-color: var(--color-text);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: transparent;
+  margin-bottom: 0;
+}
+
+.table thead th {
+  color: var(--color-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.75rem;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(42, 157, 143, 0.06);
+}
+
+.table tbody td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table td.text-end,
+.table th.text-end {
+  text-align: right;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding-inline: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 12px 24px rgb(42 157 143 / 28%);
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding-inline: 1.1rem;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  color: #ffffff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 10px 20px rgb(42 157 143 / 25%);
+}
+
+.btn-link {
+  color: var(--color-primary);
+}
+
+.btn-link:hover,
+.btn-link:focus {
+  color: var(--color-primary-dark);
+}
+
+/* Floating action button */
+.fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 2rem;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 18px 36px rgb(42 157 143 / 35%);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.fab:hover,
+.fab:focus {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+}
+
+/* Utility text colors */
+.text-muted,
+.text-secondary {
+  color: var(--color-muted) !important;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  main.container {
+    padding-block: 3rem 4rem;
+  }
+
+  .kpi {
+    padding: 1.75rem;
+  }
+
+  .card {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .appbar .navbar-nav .nav-link {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .navbar-collapse {
+    padding-block: 0.75rem;
+  }
+
+  main.container {
+    padding-inline: 1rem;
+  }
+
+  .list-group-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .kpi,
+  .card {
+    padding: 1.4rem;
+  }
+}
