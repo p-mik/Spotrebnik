@@ -14,14 +14,14 @@
   </div>
   <div class="row section-gap">
     <div class="col-12 col-lg-8">
-      <div class="card p-3">
+      <div class="card">
         <h5 class="mb-3">Poslední výdaje</h5>
         <ul class="list-group list-group-flush">
           {% for z in posledni_vydaje %}
-          <li class="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
             <div>
               <div class="fw-semibold">{{ z.datum|date:"M j, Y" }} – {{ z.castka }} Kč</div>
-              <div class="text-secondary small">{{ z.typ }} · {{ z.auto }}</div>
+              <div class="text-muted small">{{ z.typ }} · {{ z.auto }}</div>
             </div>
             <div class="list-item-actions d-flex gap-3">
               <a href="{% url 'upravit_vydaj' z.id %}" title="Upravit"><i class="bi bi-pencil"></i></a>
@@ -29,13 +29,13 @@
             </div>
           </li>
           {% empty %}
-          <p class="text-secondary m-0">Zatím žádné záznamy.</p>
+          <p class="text-muted m-0">Zatím žádné záznamy.</p>
           {% endfor %}
         </ul>
       </div>
     </div>
     <div class="col-12 col-lg-4">
-      <div class="card p-3 mb-3">
+      <div class="card mb-3">
         <h5 class="mb-3">Souhrn podle aut</h5>
         <table class="table table-sm align-middle">
           <thead><tr><th>Auto</th><th class="text-end">Celkem</th></tr></thead>
@@ -46,7 +46,7 @@
           </tbody>
         </table>
       </div>
-      <div class="card p-3">
+      <div class="card">
         <h5 class="mb-3">Souhrn podle typů</h5>
         <table class="table table-sm align-middle">
           <thead><tr><th>Typ</th><th class="text-end">Celkem</th></tr></thead>
