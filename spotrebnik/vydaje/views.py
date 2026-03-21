@@ -255,36 +255,14 @@ def prihlaseni(request):
 def home(request):
     if request.user.is_authenticated:
         dnes = date.today()
-        posledni_vydaje = Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user).order_by('-datum')[:5]
-        min_vydaje_mesic = (
-            Vydaj.objects.select_related('auto', 'typ').filter(
-                uzivatel=request.user, datum__year=dnes.year, datum__month=dnes.month
-            )
-            .aggregate(min_castka=Min('castka'))['min_castka']
-            or 0
-        )
-        prumerna_cena = (
-            Vydaj.objects.select_related('auto', 'typ').filter(
-                uzivatel=request.user, cena_za_litr__isnull=False
-            )
-            .aggregate(prumer=Avg('cena_za_litr'))['prumer']
-            or 0
-        )
-        celkem_rok = (
-            Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user, datum__year=dnes.year)
-            .aggregate(celkova_castka=Sum('castka'))['celkova_castka']
-            or 0
-        )
-        souhrn_aut = (
-            Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user)
-            .values('auto__nazev')
-            .annotate(celkova_castka=Sum('castka'))
-        )
-        souhrn_typu = (
-            Vydaj.objects.select_related('auto', 'typ').filter(uzivatel=request.user)
-            .values('typ__nazev')
-            .annotate(celkova_castka=Sum('castka'))
-        )
+        base_qs = Vydaj.objects.filter(uzivatel=request.user)
+        posledni_vydaje = base_qs.select_related('auto', 'typ').order_by('-datum')[:5]
+        agregace_mesic = base_qs.filter(datum__year=dnes.year, datum__month=dnes.month).aggregate(min_castka=Min('castka'))
+        min_vydaje_mesic = agregace_mesic['min_castka'] or 0
+        prumerna_cena = base_qs.filter(cena_za_litr__isnull=False).aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
+        celkem_rok = base_qs.filter(datum__year=dnes.year).aggregate(celkova_castka=Sum('castka'))['celkova_castka'] or 0
+        souhrn_aut = base_qs.values('auto__nazev').annotate(celkova_castka=Sum('castka'))
+        souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
         return render(
             request,
             'home.html',
