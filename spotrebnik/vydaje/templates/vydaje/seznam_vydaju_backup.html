@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Seznam výdajů{% endblock %}
+{% block content %}
+    <h1>Seznam výdajů</h1>
+
+    <form method="get">
+        <label for="typ">Typ:</label>
+        <select name="typ" id="typ">
+            <option value="">Vše</option>
+            {% for t in typy %}
+                <option value="{{ t.id }}" {% if request.GET.typ == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nazev }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="auto">Auto:</label>
+        <select name="auto" id="auto">
+            <option value="">Všechna</option>
+            {% for a in auta %}
+                <option value="{{ a.id }}" {% if request.GET.auto == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nazev }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="od">Od:</label>
+        <input type="date" name="od" id="od" value="{{ request.GET.od }}">
+
+        <label for="do">Do:</label>
+        <input type="date" name="do" id="do" value="{{ request.GET.do }}">
+
+        <label for="sort">Řadit:</label>
+        <select name="sort" id="sort">
+            <option value="-datum" {% if request.GET.sort == '-datum' or not request.GET.sort %}selected{% endif %}>Datum (sestupně)</option>
+            <option value="datum" {% if request.GET.sort == 'datum' %}selected{% endif %}>Datum (vzestupně)</option>
+            <option value="-castka" {% if request.GET.sort == '-castka' %}selected{% endif %}>Částka (sestupně)</option>
+            <option value="castka" {% if request.GET.sort == 'castka' %}selected{% endif %}>Částka (vzestupně)</option>
+            <option value="-tachometr" {% if request.GET.sort == '-tachometr' %}selected{% endif %}>Tachometr (sestupně)</option>
+            <option value="tachometr" {% if request.GET.sort == 'tachometr' %}selected{% endif %}>Tachometr (vzestupně)</option>
+        </select>
+
+        <button type="submit">Filtrovat</button>
+    </form>
+
+    <p>
+        <a href="{% url 'export_vydaje_csv' %}{% if param_string %}?{{ param_string }}{% endif %}">
+            Exportovat do CSV
+        </a>
+    </p>
+
+    {% if object_list %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Typ</th>
+                    <th>Auto</th>
+                    <th>Částka</th>
+                    <th>Tachometr</th>
+                    <th>Nájezd od posledního tankování</th>
+                    <th>Množství litrů</th>
+                    <th>Cena za litr</th>
+                    <th>Poznámka</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vydaj in object_list %}
+                <tr>
+                    <td>{{ vydaj.datum }}</td>
+                    <td>{{ vydaj.typ }}</td>
+                    <td>{{ vydaj.auto }}</td>
+                    <td>{{ vydaj.castka }} Kč</td>
+                    <td>{{ vydaj.tachometr }}</td>
+                    <td>{{ vydaj.najezd_od_posledniho_tankovani|default:"-" }}</td>
+                    <td>{{ vydaj.mnozstvi_litru|default:"-" }}</td>
+                    <td>{{ vydaj.cena_za_litr|default:"-" }} Kč</td>
+                    <td>{{ vydaj.popis|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'upravit_vydaj' vydaj.id %}">Upravit</a> |
+                        <a href="{% url 'smazat_vydaj' vydaj.id %}">Smazat</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Zatím nemáš žádné výdaje.</p>
+    {% endif %}
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if param_string %}&{{ param_string }}{% endif %}">Předchozí</a>
+        {% endif %}
+        <span>Stránka {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if param_string %}&{{ param_string }}{% endif %}">Další</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

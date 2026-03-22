@@ -3,97 +3,163 @@
 {% block content %}
     <h1>Seznam výdajů</h1>
 
-    <form method="get">
-        <label for="typ">Typ:</label>
-        <select name="typ" id="typ">
-            <option value="">Vše</option>
-            {% for t in typy %}
-                <option value="{{ t.id }}" {% if request.GET.typ == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nazev }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="auto">Auto:</label>
-        <select name="auto" id="auto">
-            <option value="">Všechna</option>
-            {% for a in auta %}
-                <option value="{{ a.id }}" {% if request.GET.auto == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nazev }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="od">Od:</label>
-        <input type="date" name="od" id="od" value="{{ request.GET.od }}">
-
-        <label for="do">Do:</label>
-        <input type="date" name="do" id="do" value="{{ request.GET.do }}">
-
-        <label for="sort">Řadit:</label>
-        <select name="sort" id="sort">
-            <option value="-datum" {% if request.GET.sort == '-datum' or not request.GET.sort %}selected{% endif %}>Datum (sestupně)</option>
-            <option value="datum" {% if request.GET.sort == 'datum' %}selected{% endif %}>Datum (vzestupně)</option>
-            <option value="-castka" {% if request.GET.sort == '-castka' %}selected{% endif %}>Částka (sestupně)</option>
-            <option value="castka" {% if request.GET.sort == 'castka' %}selected{% endif %}>Částka (vzestupně)</option>
-            <option value="-tachometr" {% if request.GET.sort == '-tachometr' %}selected{% endif %}>Tachometr (sestupně)</option>
-            <option value="tachometr" {% if request.GET.sort == 'tachometr' %}selected{% endif %}>Tachometr (vzestupně)</option>
-        </select>
-
-        <button type="submit">Filtrovat</button>
+    <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="d-flex align-items-center gap-1">
+            <label for="typ" class="form-label mb-0">Typ:</label>
+            <select name="typ" id="typ" class="form-select form-select-sm">
+                <option value="">Vše</option>
+                {% for t in typy %}
+                    <option value="{{ t.id }}" {% if request.GET.typ == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nazev }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label for="auto" class="form-label mb-0">Auto:</label>
+            <select name="auto" id="auto" class="form-select form-select-sm">
+                <option value="">Všechna</option>
+                {% for a in auta %}
+                    <option value="{{ a.id }}" {% if request.GET.auto == a.id|stringformat:"s" %}selected{% endif %}>{{ a.nazev }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label for="od" class="form-label mb-0">Od:</label>
+            <input type="date" name="od" id="od" value="{{ request.GET.od }}" class="form-control form-control-sm">
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label for="do" class="form-label mb-0">Do:</label>
+            <input type="date" name="do" id="do" value="{{ request.GET.do }}" class="form-control form-control-sm">
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label for="sort" class="form-label mb-0">Řadit:</label>
+            <select name="sort" id="sort" class="form-select form-select-sm">
+                <option value="-datum" {% if request.GET.sort == '-datum' or not request.GET.sort %}selected{% endif %}>Datum (sestupně)</option>
+                <option value="datum" {% if request.GET.sort == 'datum' %}selected{% endif %}>Datum (vzestupně)</option>
+                <option value="-castka" {% if request.GET.sort == '-castka' %}selected{% endif %}>Částka (sestupně)</option>
+                <option value="castka" {% if request.GET.sort == 'castka' %}selected{% endif %}>Částka (vzestupně)</option>
+                <option value="-tachometr" {% if request.GET.sort == '-tachometr' %}selected{% endif %}>Tachometr (sestupně)</option>
+                <option value="tachometr" {% if request.GET.sort == 'tachometr' %}selected{% endif %}>Tachometr (vzestupně)</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">Filtrovat</button>
     </form>
 
-    <p>
-        <a href="{% url 'export_vydaje_csv' %}{% if param_string %}?{{ param_string }}{% endif %}">
-            Exportovat do CSV
-        </a>
-    </p>
+    <a href="{% url 'export_vydaje_csv' %}{% if param_string %}?{{ param_string }}{% endif %}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-download"></i> Exportovat do CSV
+    </a>
 
     {% if object_list %}
-        <table border="1">
-            <thead>
+        <div class="table-responsive">
+        <table class="table table-hover w-100 align-middle">
+            <thead class="table-light">
                 <tr>
+                    <th></th>
                     <th>Datum</th>
                     <th>Typ</th>
                     <th>Auto</th>
                     <th>Částka</th>
                     <th>Tachometr</th>
-                    <th>Nájezd od posledního tankování</th>
-                    <th>Množství litrů</th>
-                    <th>Cena za litr</th>
-                    <th>Poznámka</th>
+                    <th title="Nájezd od posledního tankování">Nájezd</th>
                     <th>Akce</th>
                 </tr>
             </thead>
             <tbody>
                 {% for vydaj in object_list %}
-                <tr>
-                    <td>{{ vydaj.datum }}</td>
-                    <td>{{ vydaj.typ }}</td>
-                    <td>{{ vydaj.auto }}</td>
-                    <td>{{ vydaj.castka }} Kč</td>
-                    <td>{{ vydaj.tachometr }}</td>
-                    <td>{{ vydaj.najezd_od_posledniho_tankovani|default:"-" }}</td>
-                    <td>{{ vydaj.mnozstvi_litru|default:"-" }}</td>
-                    <td>{{ vydaj.cena_za_litr|default:"-" }} Kč</td>
-                    <td>{{ vydaj.popis|default:"-" }}</td>
+                {# Hlavní řádek #}
+                <tr class="vydaj-row" data-bs-toggle="collapse" data-bs-target="#detail-{{ vydaj.id }}" style="cursor:pointer;">
+                    <td class="text-muted" style="width:1.5rem;">
+                        <i class="bi bi-chevron-right detail-chevron" style="font-size:.75rem; transition: transform .2s;"></i>
+                    </td>
+                    <td class="text-nowrap">{{ vydaj.datum|date:"d.m.Y" }}</td>
                     <td>
-                        <a href="{% url 'upravit_vydaj' vydaj.id %}">Upravit</a> |
-                        <a href="{% url 'smazat_vydaj' vydaj.id %}">Smazat</a>
+                        {% with nazev=vydaj.typ.nazev %}
+                        {% if "Benzin" in nazev or "benzin" in nazev or "Nafta" in nazev or "nafta" in nazev %}
+                            <i class="bi bi-fuel-pump-fill text-warning" title="{{ nazev }}"></i>
+                        {% elif "Servis" in nazev or "servis" in nazev or "Oprav" in nazev or "oprav" in nazev %}
+                            <i class="bi bi-wrench-adjustable text-secondary" title="{{ nazev }}"></i>
+                        {% elif "Pojišt" in nazev or "pojišt" in nazev %}
+                            <i class="bi bi-shield-check text-success" title="{{ nazev }}"></i>
+                        {% elif "Dálni" in nazev or "dálni" in nazev or "Znám" in nazev or "znám" in nazev %}
+                            <i class="bi bi-signpost-fill text-info" title="{{ nazev }}"></i>
+                        {% elif "Pořiz" in nazev or "pořiz" in nazev or "náklad" in nazev %}
+                            <i class="bi bi-tag-fill text-primary" title="{{ nazev }}"></i>
+                        {% elif "Leasing" in nazev or "leasing" in nazev %}
+                            <i class="bi bi-calendar-check-fill text-danger" title="{{ nazev }}"></i>
+                        {% elif "Myčk" in nazev or "myčk" in nazev %}
+                            <i class="bi bi-droplet-fill text-info" title="{{ nazev }}"></i>
+                        {% elif "Parkování" in nazev or "parkování" in nazev or "Parkov" in nazev %}
+                            <i class="bi bi-p-square-fill text-secondary" title="{{ nazev }}"></i>
+                        {% else %}
+                            <i class="bi bi-receipt text-muted" title="{{ nazev }}"></i>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ vydaj.auto.nazev }}</td>
+                    <td class="text-nowrap">{{ vydaj.castka }} Kč</td>
+                    <td>{{ vydaj.tachometr|default:"-" }}</td>
+                    <td>{{ vydaj.najezd_od_posledniho_tankovani|default:"-" }}</td>
+                    <td class="text-nowrap" onclick="event.stopPropagation();">
+                        <a href="{% url 'upravit_vydaj' vydaj.id %}" class="text-primary text-decoration-none me-2" title="Upravit"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'smazat_vydaj' vydaj.id %}" class="text-danger text-decoration-none" title="Smazat"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                {# Detail řádek #}
+                <tr class="collapse" id="detail-{{ vydaj.id }}">
+                    <td colspan="8" class="bg-light py-2 px-4">
+                        <div class="row row-cols-auto g-3 small text-muted">
+                            <div class="col">
+                                <span class="fw-semibold text-dark">Typ:</span> {{ vydaj.typ.nazev }}
+                            </div>
+                            {% if vydaj.mnozstvi_litru %}
+                            <div class="col">
+                                <span class="fw-semibold text-dark">Množství:</span> {{ vydaj.mnozstvi_litru }} l
+                            </div>
+                            {% endif %}
+                            {% if vydaj.cena_za_litr %}
+                            <div class="col">
+                                <span class="fw-semibold text-dark">Cena/litr:</span> {{ vydaj.cena_za_litr }} Kč
+                            </div>
+                            {% endif %}
+                            {% if vydaj.popis %}
+                            <div class="col">
+                                <span class="fw-semibold text-dark">Poznámka:</span> {{ vydaj.popis }}
+                            </div>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     {% else %}
         <p>Zatím nemáš žádné výdaje.</p>
     {% endif %}
 
     {% if page_obj.has_other_pages %}
-    <div class="pagination">
+    <div class="d-flex align-items-center gap-2 mt-2">
         {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% if param_string %}&{{ param_string }}{% endif %}">Předchozí</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if param_string %}&{{ param_string }}{% endif %}" class="btn btn-sm btn-outline-secondary">← Předchozí</a>
         {% endif %}
-        <span>Stránka {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}</span>
+        <span class="text-muted small">Stránka {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if param_string %}&{{ param_string }}{% endif %}">Další</a>
+            <a href="?page={{ page_obj.next_page_number }}{% if param_string %}&{{ param_string }}{% endif %}" class="btn btn-sm btn-outline-secondary">Další →</a>
         {% endif %}
     </div>
     {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.vydaj-row').forEach(row => {
+        const target = row.dataset.bsTarget;
+        const chevron = row.querySelector('.detail-chevron');
+        document.querySelector(target).addEventListener('show.bs.collapse', () => {
+            chevron.style.transform = 'rotate(90deg)';
+        });
+        document.querySelector(target).addEventListener('hide.bs.collapse', () => {
+            chevron.style.transform = '';
+        });
+    });
+</script>
 {% endblock %}
