@@ -9,9 +9,10 @@ from django.db.models import Sum, Avg, Min  # Importujeme agregace
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from datetime import date
+from datetime import date, timedelta
 from calendar import monthrange
 import csv
+import json
 
 from .services import filter_vydaje
 
@@ -263,6 +264,25 @@ def home(request):
         celkem_rok = base_qs.filter(datum__year=dnes.year).aggregate(celkova_castka=Sum('castka'))['celkova_castka'] or 0
         souhrn_aut = base_qs.values('auto__nazev').annotate(celkova_castka=Sum('castka'))
         souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
+
+        rozsah = request.GET.get('rozsah', 'rok')
+        rozsah_map = {'mesic': 30, '3mesice': 90, 'rok': 365}
+        graf_qs = base_qs.filter(cena_za_litr__isnull=False).select_related('auto').order_by('datum')
+        if rozsah in rozsah_map:
+            graf_qs = graf_qs.filter(datum__gte=dnes - timedelta(days=rozsah_map[rozsah]))
+
+        graf_data = json.dumps([
+            {
+                'datum': v.datum.isoformat(),
+                'cena_za_litr': float(v.cena_za_litr),
+                'mnozstvi_litru': float(v.mnozstvi_litru) if v.mnozstvi_litru else None,
+                'auto': v.auto.nazev,
+                'castka': float(v.castka),
+            }
+            for v in graf_qs
+        ])
+        prumerna_cena_obdobi = graf_qs.aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
+
         return render(
             request,
             'home.html',
@@ -273,6 +293,9 @@ def home(request):
                 'celkem_rok': celkem_rok,
                 'souhrn_aut': souhrn_aut,
                 'souhrn_typu': souhrn_typu,
+                'graf_data': graf_data,
+                'rozsah': rozsah,
+                'prumerna_cena_obdobi': round(float(prumerna_cena_obdobi), 2),
             },
         )
     return render(request, 'home.html')

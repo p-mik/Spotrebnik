@@ -12,6 +12,33 @@
       {% include 'components/_kpi.html' with label='Celkem letos' value=celkem_rok %}
     </div>
   </div>
+
+  {% if user.is_authenticated %}
+  <div class="row section-gap">
+    <div class="col-12">
+      <div class="card">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+          <div>
+            <h5 class="mb-0">Vývoj ceny paliva</h5>
+            {% if prumerna_cena_obdobi %}
+            <small class="text-muted">Průměr za období: <strong>{{ prumerna_cena_obdobi }} Kč/l</strong></small>
+            {% endif %}
+          </div>
+          <div class="btn-group btn-group-sm" role="group" aria-label="Časový rozsah">
+            <a href="?rozsah=mesic" class="btn btn-{% if rozsah == 'mesic' %}primary{% else %}outline-secondary{% endif %}">Měsíc</a>
+            <a href="?rozsah=3mesice" class="btn btn-{% if rozsah == '3mesice' %}primary{% else %}outline-secondary{% endif %}">3 měsíce</a>
+            <a href="?rozsah=rok" class="btn btn-{% if rozsah == 'rok' %}primary{% else %}outline-secondary{% endif %}">Rok</a>
+            <a href="?rozsah=vse" class="btn btn-{% if rozsah == 'vse' %}primary{% else %}outline-secondary{% endif %}">Vše</a>
+          </div>
+        </div>
+        <div class="chart-container" style="position:relative;height:280px;">
+          <canvas id="grafCeny" aria-label="Graf vývoje ceny paliva"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row section-gap">
     <div class="col-12 col-lg-8">
       <div class="card">
@@ -59,4 +86,159 @@
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.is_authenticated %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const grafData = {{ graf_data|safe }};
+  if (!grafData.length) {
+    document.querySelector('.chart-container').innerHTML =
+      '<p class="text-muted text-center py-4">Žádná data o tankování pro toto období.</p>';
+    return;
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function trendValues(data) {
+    const n = data.length;
+    if (n < 2) return data.map(d => d.cena_za_litr);
+    const xs = data.map((_, i) => i);
+    const ys = data.map(d => d.cena_za_litr);
+    const mx = xs.reduce((a, b) => a + b, 0) / n;
+    const my = ys.reduce((a, b) => a + b, 0) / n;
+    const num = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0);
+    const den = xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+    if (den === 0) return ys.map(() => my);
+    const m = num / den;
+    const b = my - m * mx;
+    return xs.map(x => Math.round((m * x + b) * 100) / 100);
+  }
+
+  const labels = grafData.map(d => formatDate(d.datum));
+  const ceny = grafData.map(d => d.cena_za_litr);
+  const prumer = {{ prumerna_cena_obdobi }};
+  const trend = trendValues(grafData);
+
+  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
+                 document.body.classList.contains('theme-dark');
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#adb5bd' : '#6c757d';
+
+  new Chart(document.getElementById('grafCeny'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Cena za litr (Kč)',
+          data: grafData.map(d => ({
+            x: formatDate(d.datum),
+            y: d.cena_za_litr,
+            _mnozstvi: d.mnozstvi_litru,
+            _auto: d.auto,
+            _castka: d.castka,
+            _datum: d.datum,
+          })),
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13,110,253,0.08)',
+          pointBackgroundColor: '#0d6efd',
+          pointRadius: grafData.length > 60 ? 2 : 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: true,
+          order: 3,
+        },
+        {
+          label: 'Průměr',
+          data: ceny.map(() => prumer),
+          borderColor: 'rgba(25,135,84,0.7)',
+          borderDash: [6, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          tension: 0,
+          fill: false,
+          order: 2,
+        },
+        {
+          label: 'Trend',
+          data: trend,
+          borderColor: 'rgba(220,53,69,0.65)',
+          borderDash: [3, 3],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          tension: 0,
+          fill: false,
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor,
+            boxWidth: 24,
+            padding: 16,
+            font: { size: 12 },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            title(ctx) {
+              const raw = ctx[0].raw;
+              if (raw && raw._datum) return formatDate(raw._datum);
+              return ctx[0].label;
+            },
+            label(ctx) {
+              if (ctx.datasetIndex !== 0) {
+                return ` ${ctx.dataset.label}: ${Number(ctx.parsed.y).toFixed(2)} Kč/l`;
+              }
+              const raw = ctx.raw;
+              const lines = [` Cena: ${raw.y.toFixed(2)} Kč/l`];
+              if (raw._mnozstvi) lines.push(` Množství: ${raw._mnozstvi.toFixed(2)} l`);
+              if (raw._castka) lines.push(` Celkem: ${raw._castka.toFixed(0)} Kč`);
+              lines.push(` Auto: ${raw._auto}`);
+              return lines;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColor,
+            maxTicksLimit: window.innerWidth < 576 ? 4 : 8,
+            maxRotation: 30,
+            font: { size: 11 },
+          },
+          grid: { color: gridColor },
+        },
+        y: {
+          ticks: {
+            color: textColor,
+            callback: v => v.toFixed(2) + ' Kč',
+            font: { size: 11 },
+          },
+          grid: { color: gridColor },
+        },
+      },
+    },
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}
