@@ -24,11 +24,16 @@
             <small class="text-muted">Průměr za období: <strong>{{ prumerna_cena_obdobi }} Kč/l</strong></small>
             {% endif %}
           </div>
-          <div class="btn-group btn-group-sm" role="group" aria-label="Časový rozsah">
-            <a href="?rozsah=mesic" class="btn btn-{% if rozsah == 'mesic' %}primary{% else %}outline-secondary{% endif %}">Měsíc</a>
-            <a href="?rozsah=3mesice" class="btn btn-{% if rozsah == '3mesice' %}primary{% else %}outline-secondary{% endif %}">3 měsíce</a>
-            <a href="?rozsah=rok" class="btn btn-{% if rozsah == 'rok' %}primary{% else %}outline-secondary{% endif %}">Rok</a>
-            <a href="?rozsah=vse" class="btn btn-{% if rozsah == 'vse' %}primary{% else %}outline-secondary{% endif %}">Vše</a>
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <button id="btnPopisky" class="btn btn-sm btn-outline-secondary" type="button" title="Zobrazit/skrýt popisky">
+              <i class="bi bi-tag"></i> Popisky
+            </button>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Časový rozsah">
+              <a href="?rozsah=mesic" class="btn btn-{% if rozsah == 'mesic' %}primary{% else %}outline-secondary{% endif %}">Měsíc</a>
+              <a href="?rozsah=3mesice" class="btn btn-{% if rozsah == '3mesice' %}primary{% else %}outline-secondary{% endif %}">3 měsíce</a>
+              <a href="?rozsah=rok" class="btn btn-{% if rozsah == 'rok' %}primary{% else %}outline-secondary{% endif %}">Rok</a>
+              <a href="?rozsah=vse" class="btn btn-{% if rozsah == 'vse' %}primary{% else %}outline-secondary{% endif %}">Vše</a>
+            </div>
           </div>
         </div>
         <div class="chart-container" style="position:relative;height:280px;">
@@ -91,12 +96,14 @@
 {% block extra_js %}
 {% if user.is_authenticated %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
 (function () {
   const grafData = {{ graf_data|safe }};
   if (!grafData.length) {
     document.querySelector('.chart-container').innerHTML =
       '<p class="text-muted text-center py-4">Žádná data o tankování pro toto období.</p>';
+    document.getElementById('btnPopisky').style.display = 'none';
     return;
   }
 
@@ -105,10 +112,11 @@
     return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
+  // Trendová čára – lineární regrese podle reálného data (ms od epoch)
   function trendValues(data) {
     const n = data.length;
     if (n < 2) return data.map(d => d.cena_za_litr);
-    const xs = data.map((_, i) => i);
+    const xs = data.map(d => new Date(d.datum).getTime());
     const ys = data.map(d => d.cena_za_litr);
     const mx = xs.reduce((a, b) => a + b, 0) / n;
     const my = ys.reduce((a, b) => a + b, 0) / n;
@@ -122,7 +130,6 @@
 
   const labels = grafData.map(d => formatDate(d.datum));
   const ceny = grafData.map(d => d.cena_za_litr);
-  const prumer = grafData.reduce((s, d) => s + d.cena_za_litr, 0) / grafData.length;
   const trend = trendValues(grafData);
 
   const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
@@ -130,8 +137,27 @@
   const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? '#adb5bd' : '#6c757d';
 
-  new Chart(document.getElementById('grafCeny'), {
+  let popiskyZapnuty = false;
+
+  const datalabelsPlugin = {
+    display: false,
+    align: 'top',
+    anchor: 'end',
+    color: textColor,
+    font: { size: 10, weight: '600' },
+    formatter(value, ctx) {
+      const d = grafData[ctx.dataIndex];
+      const radky = [`${value.toFixed(2)} Kč/l`];
+      if (d.castka) radky.push(`${d.castka.toFixed(0)} Kč`);
+      if (d.popis) radky.push(d.popis);
+      return radky.join('\n');
+    },
+    textAlign: 'center',
+  };
+
+  const chart = new Chart(document.getElementById('grafCeny'), {
     type: 'line',
+    plugins: [ChartDataLabels],
     data: {
       labels,
       datasets: [
@@ -145,19 +171,8 @@
           pointHoverRadius: 6,
           tension: 0.3,
           fill: true,
-          order: 3,
-        },
-        {
-          label: 'Průměr',
-          data: ceny.map(() => prumer),
-          borderColor: 'rgba(25,135,84,0.7)',
-          borderDash: [6, 4],
-          borderWidth: 1.5,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          tension: 0,
-          fill: false,
           order: 2,
+          datalabels: datalabelsPlugin,
         },
         {
           label: 'Trend',
@@ -170,6 +185,7 @@
           tension: 0,
           fill: false,
           order: 1,
+          datalabels: { display: false },
         },
       ],
     },
@@ -191,18 +207,16 @@
         },
         tooltip: {
           callbacks: {
-            title(ctx) {
-              return ctx[0].label;
-            },
+            title(ctx) { return ctx[0].label; },
             label(ctx) {
               if (ctx.datasetIndex !== 0) {
                 return ` ${ctx.dataset.label}: ${Number(ctx.parsed.y).toFixed(2)} Kč/l`;
               }
-              const i = ctx.dataIndex;
-              const d = grafData[i];
+              const d = grafData[ctx.dataIndex];
               const lines = [` Cena: ${d.cena_za_litr.toFixed(2)} Kč/l`];
               if (d.mnozstvi_litru) lines.push(` Množství: ${d.mnozstvi_litru.toFixed(2)} l`);
               if (d.castka) lines.push(` Celkem: ${d.castka.toFixed(0)} Kč`);
+              if (d.popis) lines.push(` Poznámka: ${d.popis}`);
               lines.push(` Auto: ${d.auto}`);
               return lines;
             },
@@ -229,6 +243,14 @@
         },
       },
     },
+  });
+
+  document.getElementById('btnPopisky').addEventListener('click', function () {
+    popiskyZapnuty = !popiskyZapnuty;
+    chart.data.datasets[0].datalabels.display = popiskyZapnuty;
+    chart.update();
+    this.classList.toggle('btn-outline-secondary', !popiskyZapnuty);
+    this.classList.toggle('btn-primary', popiskyZapnuty);
   });
 })();
 </script>

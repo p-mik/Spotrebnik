@@ -278,6 +278,7 @@ def home(request):
                 'mnozstvi_litru': float(v.mnozstvi_litru) if v.mnozstvi_litru else None,
                 'auto': v.auto.nazev,
                 'castka': float(v.castka),
+                'popis': v.popis or '',
             }
             for v in graf_qs
         ])
