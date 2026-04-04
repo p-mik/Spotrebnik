@@ -39,7 +39,7 @@
   </div>
   {% endif %}
 
-  <div class="row section-gap">
+  <div class="row section-gap mt-4">
     <div class="col-12 col-lg-8">
       <div class="card">
         <h5 class="mb-3">Poslední výdaje</h5>
@@ -137,14 +137,7 @@
       datasets: [
         {
           label: 'Cena za litr (Kč)',
-          data: grafData.map(d => ({
-            x: formatDate(d.datum),
-            y: d.cena_za_litr,
-            _mnozstvi: d.mnozstvi_litru,
-            _auto: d.auto,
-            _castka: d.castka,
-            _datum: d.datum,
-          })),
+          data: ceny,
           borderColor: '#0d6efd',
           backgroundColor: 'rgba(13,110,253,0.08)',
           pointBackgroundColor: '#0d6efd',
@@ -199,19 +192,18 @@
         tooltip: {
           callbacks: {
             title(ctx) {
-              const raw = ctx[0].raw;
-              if (raw && raw._datum) return formatDate(raw._datum);
               return ctx[0].label;
             },
             label(ctx) {
               if (ctx.datasetIndex !== 0) {
                 return ` ${ctx.dataset.label}: ${Number(ctx.parsed.y).toFixed(2)} Kč/l`;
               }
-              const raw = ctx.raw;
-              const lines = [` Cena: ${raw.y.toFixed(2)} Kč/l`];
-              if (raw._mnozstvi) lines.push(` Množství: ${raw._mnozstvi.toFixed(2)} l`);
-              if (raw._castka) lines.push(` Celkem: ${raw._castka.toFixed(0)} Kč`);
-              lines.push(` Auto: ${raw._auto}`);
+              const i = ctx.dataIndex;
+              const d = grafData[i];
+              const lines = [` Cena: ${d.cena_za_litr.toFixed(2)} Kč/l`];
+              if (d.mnozstvi_litru) lines.push(` Množství: ${d.mnozstvi_litru.toFixed(2)} l`);
+              if (d.castka) lines.push(` Celkem: ${d.castka.toFixed(0)} Kč`);
+              lines.push(` Auto: ${d.auto}`);
               return lines;
             },
           },
