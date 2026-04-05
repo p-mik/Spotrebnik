@@ -23,17 +23,21 @@
       </button>
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Domů</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'seznam_aut' %}">Auta</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'seznam_vydaju' %}">Výdaje</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'seznam_typu' %}">Typy</a></li>
+          {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Domů</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'seznam_aut' %}">Auta</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'seznam_vydaju' %}">Výdaje</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'seznam_typu' %}">Typy</a></li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'landing' %}">Domů</a></li>
+          {% endif %}
         </ul>
         <div class="d-flex align-items-center gap-3">
           {% if user.is_authenticated %}
             <span class="text-muted d-none d-md-inline">{{ user.username }}</span>
             <a class="btn btn-sm btn-primary" href="{% url 'odhlaseni' %}">Odhlásit se</a>
           {% else %}
-            <a class="btn btn-sm btn-outline-primary" href="{% url 'prihlaseni' %}">Přihlásit</a>
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'prihlaseni' %}">Přihlásit se</a>
             <a class="btn btn-sm btn-primary" href="{% url 'registrace' %}">Registrace</a>
           {% endif %}
         </div>

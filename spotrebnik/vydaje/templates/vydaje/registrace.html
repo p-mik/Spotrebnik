@@ -1,10 +1,42 @@
 {% extends 'base.html' %}
-{% block title %}Registrace{% endblock %}
+{% block title %}Registrace – Spotřebník{% endblock %}
+{% block floating %}{% endblock %}
 {% block content %}
-    <h1>Registrace</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Registrovat</button>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="auth-logo-icon">⏱️</span>
+      <span class="auth-logo-name">Spotřebník</span>
+    </div>
+    <h1 class="auth-title">Vytvoř účet</h1>
+    <p class="auth-subtitle">Začni sledovat výdaje na svá auta</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="auth-field">
+          <label class="auth-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="auth-error">{{ field.errors.0 }}</div>
+          {% endif %}
+          {% if field.help_text %}
+            <div class="auth-help">{{ field.help_text }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      {% if form.non_field_errors %}
+        <div class="auth-error mb-3">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <button type="submit" class="auth-btn">Zaregistrovat se</button>
     </form>
+
+    <p class="auth-footer">
+      Už máš účet? <a href="{% url 'prihlaseni' %}">Přihlaš se</a>
+    </p>
+  </div>
+</div>
 {% endblock %}

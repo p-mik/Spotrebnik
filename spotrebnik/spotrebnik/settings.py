@@ -128,6 +128,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGIN_URL = '/prihlaseni/'
+LOGIN_REDIRECT_URL = '/prehled/'
+
+# Session: výchozí délka 2 týdny, prodloužena přes remember me na 30 dní
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 dní
+
 # Security headers (production)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

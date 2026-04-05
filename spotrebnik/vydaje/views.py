@@ -225,6 +225,12 @@ def export_vydaje_csv(request):
     return response
 
 
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    return render(request, 'landing.html')
+
+
 def registrace(request):
     if request.method == "POST":
         form = RegistraceForm(request.POST)
@@ -247,59 +253,63 @@ def prihlaseni(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             login(request, form.get_user())
-            return redirect('home')
+            if not request.POST.get('remember_me'):
+                request.session.set_expiry(0)  # session expiruje zavřením prohlížeče
+            else:
+                request.session.set_expiry(60 * 60 * 24 * 30)  # 30 dní
+            next_url = request.GET.get('next') or request.POST.get('next') or 'home'
+            return redirect(next_url)
     else:
         form = AuthenticationForm()
-    return render(request, 'vydaje/prihlaseni.html', {'form': form})
+    return render(request, 'vydaje/prihlaseni.html', {'form': form, 'next': request.GET.get('next', '')})
 
 
+@login_required
 def home(request):
-    if request.user.is_authenticated:
-        dnes = date.today()
-        base_qs = Vydaj.objects.filter(uzivatel=request.user)
-        posledni_vydaje = base_qs.select_related('auto', 'typ').order_by('-datum')[:5]
-        agregace_mesic = base_qs.filter(datum__year=dnes.year, datum__month=dnes.month).aggregate(min_castka=Min('castka'))
-        min_vydaje_mesic = agregace_mesic['min_castka'] or 0
-        prumerna_cena = base_qs.filter(cena_za_litr__isnull=False).aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
-        celkem_rok = base_qs.filter(datum__year=dnes.year).aggregate(celkova_castka=Sum('castka'))['celkova_castka'] or 0
-        souhrn_aut = base_qs.values('auto__nazev').annotate(celkova_castka=Sum('castka'))
-        souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
+    dnes = date.today()
+    base_qs = Vydaj.objects.filter(uzivatel=request.user)
+    posledni_vydaje = base_qs.select_related('auto', 'typ').order_by('-datum')[:5]
+    agregace_mesic = base_qs.filter(datum__year=dnes.year, datum__month=dnes.month).aggregate(min_castka=Min('castka'))
+    min_vydaje_mesic = agregace_mesic['min_castka'] or 0
+    prumerna_cena = base_qs.filter(cena_za_litr__isnull=False).aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
+    celkem_rok = base_qs.filter(datum__year=dnes.year).aggregate(celkova_castka=Sum('castka'))['celkova_castka'] or 0
+    souhrn_aut = base_qs.values('auto__nazev').annotate(celkova_castka=Sum('castka'))
+    souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
 
-        rozsah = request.GET.get('rozsah', 'rok')
-        rozsah_map = {'mesic': 30, '3mesice': 90, 'rok': 365}
-        graf_qs = base_qs.filter(cena_za_litr__isnull=False).select_related('auto').order_by('datum')
-        if rozsah in rozsah_map:
-            graf_qs = graf_qs.filter(datum__gte=dnes - timedelta(days=rozsah_map[rozsah]))
+    rozsah = request.GET.get('rozsah', 'rok')
+    rozsah_map = {'mesic': 30, '3mesice': 90, 'rok': 365}
+    graf_qs = base_qs.filter(cena_za_litr__isnull=False).select_related('auto').order_by('datum')
+    if rozsah in rozsah_map:
+        graf_qs = graf_qs.filter(datum__gte=dnes - timedelta(days=rozsah_map[rozsah]))
 
-        graf_data = json.dumps([
-            {
-                'datum': v.datum.isoformat(),
-                'cena_za_litr': float(v.cena_za_litr),
-                'mnozstvi_litru': float(v.mnozstvi_litru) if v.mnozstvi_litru else None,
-                'auto': v.auto.nazev,
-                'castka': float(v.castka),
-                'popis': v.popis or '',
-            }
-            for v in graf_qs
-        ])
-        prumerna_cena_obdobi = graf_qs.aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
+    graf_data = json.dumps([
+        {
+            'datum': v.datum.isoformat(),
+            'cena_za_litr': float(v.cena_za_litr),
+            'mnozstvi_litru': float(v.mnozstvi_litru) if v.mnozstvi_litru else None,
+            'auto': v.auto.nazev,
+            'castka': float(v.castka),
+            'popis': v.popis or '',
+        }
+        for v in graf_qs
+    ])
+    prumerna_cena_obdobi = graf_qs.aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
 
-        return render(
-            request,
-            'home.html',
-            {
-                'posledni_vydaje': posledni_vydaje,
-                'min_vydaje_mesic': min_vydaje_mesic,
-                'prumerna_cena': prumerna_cena,
-                'celkem_rok': celkem_rok,
-                'souhrn_aut': souhrn_aut,
-                'souhrn_typu': souhrn_typu,
-                'graf_data': graf_data,
-                'rozsah': rozsah,
-                'prumerna_cena_obdobi': round(float(prumerna_cena_obdobi), 2),
-            },
-        )
-    return render(request, 'home.html')
+    return render(
+        request,
+        'home.html',
+        {
+            'posledni_vydaje': posledni_vydaje,
+            'min_vydaje_mesic': min_vydaje_mesic,
+            'prumerna_cena': prumerna_cena,
+            'celkem_rok': celkem_rok,
+            'souhrn_aut': souhrn_aut,
+            'souhrn_typu': souhrn_typu,
+            'graf_data': graf_data,
+            'rozsah': rozsah,
+            'prumerna_cena_obdobi': round(float(prumerna_cena_obdobi), 2),
+        },
+    )
 
 
 @login_required

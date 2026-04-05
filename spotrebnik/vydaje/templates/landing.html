@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Spotřebník – Přehled výdajů na vozidla{% endblock %}
+{% block floating %}{% endblock %}
+{% block content %}
+
+<section class="landing-hero">
+  <div class="landing-hero-inner">
+    <div class="landing-badge">Zdarma · Bez reklam</div>
+    <h1 class="landing-headline">Víš, kolik tě stojí tvoje auto?</h1>
+    <p class="landing-subline">Spotřebník ti pomůže sledovat každý výdaj – od tankování přes servis až po pojistné. Přehledně, rychle, na jednom místě.</p>
+    <div class="landing-cta">
+      <a href="{% url 'registrace' %}" class="btn btn-primary btn-lg">Začít zdarma</a>
+      <a href="{% url 'prihlaseni' %}" class="btn btn-outline-secondary btn-lg">Přihlásit se</a>
+    </div>
+  </div>
+</section>
+
+<section class="landing-features">
+  <div class="row g-4">
+    <div class="col-12 col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon">⛽</div>
+        <h3 class="feature-title">Evidence výdajů</h3>
+        <p class="feature-text">Zaznamenávej tankování, servis, pojistné nebo leasing. Ke každému záznamu přidej množství litrů, tachometr a poznámku.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3 class="feature-title">Grafy a trendy</h3>
+        <p class="feature-text">Sleduj vývoj ceny paliva v čase. Interaktivní graf s trendovou čárou ti ukáže, jestli tankuješ levněji nebo dráž než dříve.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon">🚗</div>
+        <h3 class="feature-title">Více vozidel</h3>
+        <p class="feature-text">Spravuj libovolný počet aut. Porovnej náklady mezi vozidly a zjisti, které tě stojí nejvíc.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Přehledný dashboard</h3>
+        <p class="feature-text">Na domovské stránce uvidíš minimální výdaj, průměrnou cenu paliva a celkové náklady za rok – vše na první pohled.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon">📤</div>
+        <h3 class="feature-title">Export do CSV</h3>
+        <p class="feature-text">Vyfiltruj si data podle vozidla, typu výdaje nebo období a exportuj je do CSV pro vlastní analýzy v Excelu.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3 class="feature-title">Tvá data jsou jen tvá</h3>
+        <p class="feature-text">Každý uživatel vidí pouze vlastní záznamy. Žádné sdílení dat s třetími stranami.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-cta-bottom">
+  <h2>Připravený začít?</h2>
+  <p>Registrace zabere méně než minutu.</p>
+  <a href="{% url 'registrace' %}" class="btn btn-primary btn-lg">Vytvořit účet zdarma</a>
+</section>
+
+{% endblock %}

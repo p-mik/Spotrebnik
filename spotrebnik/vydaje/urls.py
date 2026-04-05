@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     home,
+    landing,
     odhlaseni,
     export_vydaje_csv,
     prihlaseni,
@@ -20,7 +21,8 @@ from .views import (
 )
 
 urlpatterns = [
-    path('', home, name='home'),  # Hlavní stránka
+    path('', landing, name='landing'),
+    path('prehled/', home, name='home'),
     path('vydaje/', VydajListView.as_view(), name='seznam_vydaju'),
     path('vydaje/pridat/', VydajCreateView.as_view(), name='pridat_vydaj'),
     path('vydaje/<int:pk>/upravit/', VydajUpdateView.as_view(), name='upravit_vydaj'),
