@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}{{ auto.nazev }} – přehled{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
+  <h2 class="mb-0">{{ auto.nazev }} <span class="text-muted fs-5 fw-normal">{{ auto.spz }}</span></h2>
+  <div class="d-flex gap-2">
+    <a href="{% url 'upravit_auto' auto.id %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Upravit</a>
+    <a href="{% url 'seznam_aut' %}" class="btn btn-sm btn-outline-secondary">Zpět</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% if auto.porizovaci_naklad %}
+  <div class="col-12 col-sm-6 col-lg-3">
+    {% include 'components/_kpi.html' with label='Pořizovací náklad' value=auto.porizovaci_naklad|floatformat:0 %}
+  </div>
+  {% endif %}
+  <div class="col-12 col-sm-6 col-lg-3">
+    {% include 'components/_kpi.html' with label='Celkové výdaje' value=celkem|floatformat:0 %}
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    {% if cena_za_km %}
+      {% include 'components/_kpi.html' with label='Cena za km' value=cena_za_km|floatformat:2 %}
+    {% else %}
+      {% include 'components/_kpi.html' with label='Cena za km' value='–' %}
+    {% endif %}
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    {% if cena_za_mesic %}
+      {% include 'components/_kpi.html' with label='Cena za měsíc' value=cena_za_mesic|floatformat:0 %}
+    {% else %}
+      {% include 'components/_kpi.html' with label='Cena za měsíc' value='–' %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <h5 class="mb-3">Výdaje podle druhu</h5>
+      {% if rozpad %}
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr><th>Druh</th><th class="text-end">Celkem</th><th class="text-end">Podíl</th></tr>
+        </thead>
+        <tbody>
+          {% for r in rozpad %}
+          <tr>
+            <td>{{ r.typ__nazev }}</td>
+            <td class="text-end">{{ r.castka|floatformat:0 }} Kč</td>
+            <td class="text-end text-muted small">
+              {% if celkem %}
+                {% widthratio r.castka celkem 100 %} %
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="fw-semibold">
+          <tr>
+            <td>Celkem</td>
+            <td class="text-end">{{ celkem|floatformat:0 }} Kč</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      {% else %}
+      <p class="text-muted mb-0">Zatím žádné výdaje.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <h5 class="mb-3">Informace o vozidle</h5>
+      <table class="table table-sm align-middle mb-0">
+        <tbody>
+          <tr><td class="text-muted">SPZ</td><td>{{ auto.spz }}</td></tr>
+          {% if auto.porizovaci_naklad %}
+          <tr><td class="text-muted">Pořizovací náklad</td><td>{{ auto.porizovaci_naklad|floatformat:0 }} Kč</td></tr>
+          {% endif %}
+          {% if auto.operativni_leasing %}
+          <tr><td class="text-muted">Operativní leasing</td><td>Ano</td></tr>
+          {% if auto.mesicni_platba %}
+          <tr><td class="text-muted">Měsíční platba</td><td>{{ auto.mesicni_platba|floatformat:0 }} Kč</td></tr>
+          {% endif %}
+          {% if auto.den_splatnosti %}
+          <tr><td class="text-muted">Den splatnosti</td><td>{{ auto.den_splatnosti }}.</td></tr>
+          {% endif %}
+          {% endif %}
+          {% if total_km %}
+          <tr><td class="text-muted">Najeté km (evidence)</td><td>{{ total_km }} km</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

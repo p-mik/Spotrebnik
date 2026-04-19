@@ -1,11 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .models import Auto, Vydaj, TypVydaje
 from .forms import AutoForm, VydajForm, RegistraceForm, TypVydajeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import Sum, Avg, Min  # Importujeme agregace
+from django.db.models import Sum, Avg, Min, Max
+from decimal import Decimal
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -14,7 +15,7 @@ from calendar import monthrange
 import csv
 import json
 
-from .services import filter_vydaje
+from .services import filter_vydaje, vypocitej_stats
 
 
 def zpracuj_auto_vydaje(auto):
@@ -123,6 +124,15 @@ class AutoListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Auto.objects.filter(uzivatel=self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        auta_stats = []
+        for auto in context['object_list']:
+            qs = Vydaj.objects.filter(auto=auto, uzivatel=self.request.user)
+            auta_stats.append((auto, vypocitej_stats(qs)))
+        context['auta_stats'] = auta_stats
+        return context
+
 
 class AutoCreateView(LoginRequiredMixin, CreateView):
     model = Auto
@@ -159,6 +169,19 @@ class AutoDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Auto.objects.filter(uzivatel=self.request.user)
+
+
+@login_required
+def auto_detail(request, pk):
+    auto = get_object_or_404(Auto, pk=pk, uzivatel=request.user)
+    qs = Vydaj.objects.filter(auto=auto, uzivatel=request.user)
+    rozpad = qs.values('typ__nazev').annotate(castka=Sum('castka')).order_by('-castka')
+    stats = vypocitej_stats(qs)
+    return render(request, 'vydaje/detail_auta.html', {
+        'auto': auto,
+        'rozpad': rozpad,
+        **stats,
+    })
 
 
 class TypVydajeListView(LoginRequiredMixin, ListView):
@@ -301,6 +324,7 @@ def home(request):
     graf_data = json.dumps(graf_dict)
     prumerna_cena_obdobi = graf_qs.aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
     auta = Auto.objects.filter(uzivatel=request.user)
+    kpi_stats = vypocitej_stats(kpi_qs)
 
     return render(
         request,
@@ -317,6 +341,8 @@ def home(request):
             'auto_filter': auto_filter,
             'auta': auta,
             'prumerna_cena_obdobi': round(float(prumerna_cena_obdobi), 2),
+            'cena_za_km': kpi_stats['cena_za_km'],
+            'cena_za_mesic': kpi_stats['cena_za_mesic'],
         },
     )
 
