@@ -5,9 +5,16 @@ from django.db.models import Sum, Min, Max
 from .models import Vydaj
 
 
-def vypocitej_stats(qs):
-    """Cena za km a cena za měsíc z libovolného Vydaj querysetu."""
+def vypocitej_stats(qs, km_typy_ids=None):
+    """Cena za km a cena za měsíc z libovolného Vydaj querysetu.
+
+    km_typy_ids: volitelný seznam ID typů výdajů zahrnutých do čitatele (cena za km/měsíc).
+    Jmenovatel (najeté km) se vždy počítá z celého qs.
+    """
     celkem = qs.aggregate(total=Sum('castka'))['total'] or Decimal('0')
+
+    cost_qs = qs.filter(typ_id__in=km_typy_ids) if km_typy_ids else qs
+    celkem_pro_km = cost_qs.aggregate(total=Sum('castka'))['total'] or Decimal('0')
 
     km_data = (
         qs.filter(tachometr__isnull=False)
@@ -15,7 +22,7 @@ def vypocitej_stats(qs):
         .annotate(max_t=Max('tachometr'), min_t=Min('tachometr'))
     )
     total_km = sum(r['max_t'] - r['min_t'] for r in km_data if r['max_t'] > r['min_t'])
-    cena_za_km = round(float(celkem) / total_km, 2) if total_km > 0 else None
+    cena_za_km = round(float(celkem_pro_km) / total_km, 2) if total_km > 0 else None
 
     min_datum = qs.aggregate(min_d=Min('datum'))['min_d']
     cena_za_mesic = None
@@ -23,7 +30,7 @@ def vypocitej_stats(qs):
         today = date.today()
         pocet_mesicu = (today.year - min_datum.year) * 12 + (today.month - min_datum.month)
         if pocet_mesicu > 0:
-            cena_za_mesic = round(float(celkem) / pocet_mesicu, 2)
+            cena_za_mesic = round(float(celkem_pro_km) / pocet_mesicu, 2)
 
     return {
         'celkem': celkem,

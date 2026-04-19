@@ -126,11 +126,15 @@ class AutoListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        km_typy = self.request.GET.getlist('km_typy')
+        km_typy_ids = [int(x) for x in km_typy if x.isdigit()] or None
         auta_stats = []
         for auto in context['object_list']:
             qs = Vydaj.objects.filter(auto=auto, uzivatel=self.request.user)
-            auta_stats.append((auto, vypocitej_stats(qs)))
+            auta_stats.append((auto, vypocitej_stats(qs, km_typy_ids)))
         context['auta_stats'] = auta_stats
+        context['typy'] = TypVydaje.objects.all()
+        context['km_typy_ids'] = km_typy_ids or []
         return context
 
 
@@ -176,10 +180,14 @@ def auto_detail(request, pk):
     auto = get_object_or_404(Auto, pk=pk, uzivatel=request.user)
     qs = Vydaj.objects.filter(auto=auto, uzivatel=request.user)
     rozpad = qs.values('typ__nazev').annotate(castka=Sum('castka')).order_by('-castka')
-    stats = vypocitej_stats(qs)
+    km_typy = request.GET.getlist('km_typy')
+    km_typy_ids = [int(x) for x in km_typy if x.isdigit()] or None
+    stats = vypocitej_stats(qs, km_typy_ids)
     return render(request, 'vydaje/detail_auta.html', {
         'auto': auto,
         'rozpad': rozpad,
+        'typy': TypVydaje.objects.all(),
+        'km_typy_ids': km_typy_ids or [],
         **stats,
     })
 
@@ -294,6 +302,8 @@ def home(request):
     rozsah = request.GET.get('rozsah', 'rok')
     auto_filter = request.GET.get('auto', '')
     kpi_qs = base_qs.filter(auto__id=auto_filter) if auto_filter else base_qs
+    km_typy = request.GET.getlist('km_typy')
+    km_typy_ids = [int(x) for x in km_typy if x.isdigit()] or None
 
     posledni_vydaje = base_qs.select_related('auto', 'typ').order_by('-datum')[:5]
     agregace_mesic = kpi_qs.filter(datum__year=dnes.year, datum__month=dnes.month).aggregate(min_castka=Min('castka'))
@@ -324,7 +334,7 @@ def home(request):
     graf_data = json.dumps(graf_dict)
     prumerna_cena_obdobi = graf_qs.aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
     auta = Auto.objects.filter(uzivatel=request.user)
-    kpi_stats = vypocitej_stats(kpi_qs)
+    kpi_stats = vypocitej_stats(kpi_qs, km_typy_ids)
 
     return render(
         request,
@@ -343,6 +353,8 @@ def home(request):
             'prumerna_cena_obdobi': round(float(prumerna_cena_obdobi), 2),
             'cena_za_km': kpi_stats['cena_za_km'],
             'cena_za_mesic': kpi_stats['cena_za_mesic'],
+            'typy': TypVydaje.objects.all(),
+            'km_typy_ids': km_typy_ids or [],
         },
     )
 

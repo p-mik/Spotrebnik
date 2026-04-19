@@ -59,5 +59,23 @@
     }
   </script>
   {% block extra_js %}{% endblock %}
+  <script>
+  (function () {
+    var checks = document.querySelectorAll('.km-typy-check');
+    if (!checks.length) return;
+    checks.forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        var url = new URL(window.location.href);
+        var all = document.querySelectorAll('.km-typy-check');
+        var checked = Array.from(all).filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+        url.searchParams.delete('km_typy');
+        if (checked.length < all.length) {
+          checked.forEach(function (id) { url.searchParams.append('km_typy', id); });
+        }
+        window.location.href = url.toString();
+      });
+    });
+  })();
+  </script>
 </body>
 </html>

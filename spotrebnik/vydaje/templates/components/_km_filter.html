@@ -1,0 +1,15 @@
+{% if typy %}
+<div class="km-filter d-flex align-items-center gap-3 flex-wrap mb-2">
+  <span class="text-muted small fw-semibold text-nowrap">Kč/km zahrnuje:</span>
+  <div class="d-flex flex-wrap gap-2">
+    {% for typ in typy %}
+    <div class="form-check form-check-inline mb-0">
+      <input class="form-check-input km-typy-check" type="checkbox"
+             value="{{ typ.id }}" id="kmtyp{{ typ.id }}"
+             {% if not km_typy_ids or typ.id in km_typy_ids %}checked{% endif %}>
+      <label class="form-check-label small" for="kmtyp{{ typ.id }}">{{ typ.nazev }}</label>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

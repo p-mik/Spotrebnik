@@ -31,6 +31,8 @@
     </div>
   </div>
 
+  {% include 'components/_km_filter.html' %}
+
   {% if user.is_authenticated %}
   <div class="row section-gap">
     <div class="col-12">
@@ -63,9 +65,9 @@
   </div>
   {% endif %}
 
-  <div class="row section-gap mt-4">
-    <div class="col-12 col-lg-8">
-      <div class="card">
+  <div class="row section-gap mt-4 g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
         <h5 class="mb-3">Poslední výdaje</h5>
         <ul class="list-group list-group-flush">
           {% for z in posledni_vydaje %}
@@ -85,10 +87,10 @@
         </ul>
       </div>
     </div>
-    <div class="col-12 col-lg-4">
-      <div class="card mb-3">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100">
         <h5 class="mb-3">Souhrn podle aut</h5>
-        <table class="table table-sm align-middle">
+        <table class="table table-sm align-middle mb-0">
           <thead><tr><th>Auto</th><th class="text-end">Celkem</th></tr></thead>
           <tbody>
             {% for r in souhrn_aut %}
@@ -97,9 +99,11 @@
           </tbody>
         </table>
       </div>
-      <div class="card">
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100">
         <h5 class="mb-3">Souhrn podle typů</h5>
-        <table class="table table-sm align-middle">
+        <table class="table table-sm align-middle mb-0">
           <thead><tr><th>Typ</th><th class="text-end">Celkem</th></tr></thead>
           <tbody>
             {% for r in souhrn_typu %}
