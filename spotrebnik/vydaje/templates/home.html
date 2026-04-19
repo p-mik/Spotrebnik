@@ -1,6 +1,18 @@
 {% extends 'base.html' %}
 {% block title %}Spotřebník – Přehled{% endblock %}
 {% block content %}
+
+  {% if user.is_authenticated and auta.count > 1 %}
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <div class="btn-group btn-group-sm" role="group" aria-label="Vozidlo">
+      <a href="?rozsah={{ rozsah }}" class="btn btn-{% if not auto_filter %}primary{% else %}outline-secondary{% endif %}">Všechna auta</a>
+      {% for auto in auta %}
+      <a href="?rozsah={{ rozsah }}&auto={{ auto.id }}" class="btn btn-{% if auto_filter == auto.id|stringformat:"s" %}primary{% else %}outline-secondary{% endif %}">{{ auto.nazev }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row g-3 mb-2">
     <div class="col-12 col-md-4">
       {% include 'components/_kpi.html' with label='Min. výdaje tento měsíc' value=min_vydaje_mesic %}
@@ -28,14 +40,6 @@
             <button id="btnPopisky" class="btn btn-sm btn-outline-secondary" type="button" title="Zobrazit/skrýt popisky">
               <i class="bi bi-tag"></i> Popisky
             </button>
-            {% if auta.count > 1 %}
-            <div class="btn-group btn-group-sm" role="group" aria-label="Vozidlo">
-              <a href="?rozsah={{ rozsah }}" class="btn btn-{% if not auto_filter %}primary{% else %}outline-secondary{% endif %}">Všechna auta</a>
-              {% for auto in auta %}
-              <a href="?rozsah={{ rozsah }}&auto={{ auto.id }}" class="btn btn-{% if auto_filter == auto.id|stringformat:"s" %}primary{% else %}outline-secondary{% endif %}">{{ auto.nazev }}</a>
-              {% endfor %}
-            </div>
-            {% endif %}
             <div class="btn-group btn-group-sm" role="group" aria-label="Časový rozsah">
               <a href="?rozsah=mesic{% if auto_filter %}&auto={{ auto_filter }}{% endif %}" class="btn btn-{% if rozsah == 'mesic' %}primary{% else %}outline-secondary{% endif %}">Měsíc</a>
               <a href="?rozsah=3mesice{% if auto_filter %}&auto={{ auto_filter }}{% endif %}" class="btn btn-{% if rozsah == '3mesice' %}primary{% else %}outline-secondary{% endif %}">3 měsíce</a>
@@ -105,6 +109,7 @@
 {% block extra_js %}
 {% if user.is_authenticated %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
 (function () {
@@ -128,8 +133,7 @@
   }
 
   function formatDate(iso) {
-    const d = new Date(iso);
-    return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   function trendValuesForAuto(points, allDates) {
@@ -173,7 +177,6 @@
   const allDatesSet = new Set();
   autoNames.forEach(name => grafData[name].forEach(d => allDatesSet.add(d.datum)));
   const allDates = Array.from(allDatesSet).sort();
-  const labels = allDates.map(formatDate);
 
   const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
                  document.body.classList.contains('theme-dark');
@@ -187,8 +190,9 @@
     const color = PALETTE[idx % PALETTE.length];
     const points = grafData[name];
     const dataMap = autoDataMaps[name];
-    const mainData = allDates.map(d => dataMap[d] ? dataMap[d].cena_za_litr : null);
-    const trendData = trendValuesForAuto(points, allDates);
+    const mainData = allDates.map(d => ({ x: d, y: dataMap[d] ? dataMap[d].cena_za_litr : null }));
+    const trendRaw = trendValuesForAuto(points, allDates);
+    const trendData = allDates.map((d, i) => ({ x: d, y: trendRaw[i] }));
 
     datasets.push({
       label: name,
@@ -211,10 +215,10 @@
         color: textColor,
         font: { size: 10, weight: '600' },
         formatter(value, ctx) {
-          if (value === null) return null;
+          if (!value || value.y === null) return null;
           const d = dataMap[allDates[ctx.dataIndex]];
           if (!d) return null;
-          const rows = [`${value.toFixed(2)} Kč/l`];
+          const rows = [`${value.y.toFixed(2)} Kč/l`];
           if (d.castka) rows.push(`${d.castka.toFixed(0)} Kč`);
           if (d.popis) rows.push(d.popis);
           return rows.join('\n');
@@ -244,7 +248,7 @@
   const chart = new Chart(document.getElementById('grafCeny'), {
     type: 'line',
     plugins: [ChartDataLabels],
-    data: { labels, datasets },
+    data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -252,13 +256,14 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          filter(item) { return !item.dataset.isTrend; },
+          filter(item) { return !item.dataset.isTrend && item.parsed.y !== null; },
           callbacks: {
-            title(ctx) { return ctx[0]?.label; },
+            title(ctx) {
+              return ctx[0] ? formatDate(allDates[ctx[0].dataIndex]) : '';
+            },
             label(ctx) {
               const name = ctx.dataset.label;
-              const dateIso = allDates[ctx.dataIndex];
-              const d = autoDataMaps[name]?.[dateIso];
+              const d = autoDataMaps[name]?.[allDates[ctx.dataIndex]];
               if (!d) return null;
               const lines = [` ${name}: ${d.cena_za_litr.toFixed(2)} Kč/l`];
               if (d.mnozstvi_litru) lines.push(`   Množství: ${d.mnozstvi_litru.toFixed(2)} l`);
@@ -271,11 +276,15 @@
       },
       scales: {
         x: {
+          type: 'time',
+          time: { unit: 'month' },
           ticks: {
             color: textColor,
-            maxTicksLimit: window.innerWidth < 576 ? 4 : 8,
-            maxRotation: 30,
+            maxTicksLimit: window.innerWidth < 576 ? 4 : 10,
             font: { size: 11 },
+            callback(value) {
+              return new Date(value).toLocaleDateString('cs-CZ', { month: 'short', year: 'numeric' });
+            },
           },
           grid: { color: gridColor },
         },
@@ -291,7 +300,6 @@
     },
   });
 
-  // Toggle buttons per auto
   if (autoNames.length > 1) {
     const toggleDiv = document.getElementById('autoToggle');
     autoNames.forEach((name, idx) => {

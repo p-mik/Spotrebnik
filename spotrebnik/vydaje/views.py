@@ -268,16 +268,17 @@ def prihlaseni(request):
 def home(request):
     dnes = date.today()
     base_qs = Vydaj.objects.filter(uzivatel=request.user)
-    posledni_vydaje = base_qs.select_related('auto', 'typ').order_by('-datum')[:5]
-    agregace_mesic = base_qs.filter(datum__year=dnes.year, datum__month=dnes.month).aggregate(min_castka=Min('castka'))
-    min_vydaje_mesic = agregace_mesic['min_castka'] or 0
-    prumerna_cena = base_qs.filter(cena_za_litr__isnull=False).aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
-    celkem_rok = base_qs.filter(datum__year=dnes.year).aggregate(celkova_castka=Sum('castka'))['celkova_castka'] or 0
-    souhrn_aut = base_qs.values('auto__nazev').annotate(celkova_castka=Sum('castka'))
-    souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
-
     rozsah = request.GET.get('rozsah', 'rok')
     auto_filter = request.GET.get('auto', '')
+    kpi_qs = base_qs.filter(auto__id=auto_filter) if auto_filter else base_qs
+
+    posledni_vydaje = base_qs.select_related('auto', 'typ').order_by('-datum')[:5]
+    agregace_mesic = kpi_qs.filter(datum__year=dnes.year, datum__month=dnes.month).aggregate(min_castka=Min('castka'))
+    min_vydaje_mesic = agregace_mesic['min_castka'] or 0
+    prumerna_cena = kpi_qs.filter(cena_za_litr__isnull=False).aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
+    celkem_rok = kpi_qs.filter(datum__year=dnes.year).aggregate(celkova_castka=Sum('castka'))['celkova_castka'] or 0
+    souhrn_aut = base_qs.values('auto__nazev').annotate(celkova_castka=Sum('castka'))
+    souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
     rozsah_map = {'mesic': 30, '3mesice': 90, 'rok': 365}
     graf_qs = base_qs.filter(cena_za_litr__isnull=False).select_related('auto').order_by('datum')
     if rozsah in rozsah_map:
