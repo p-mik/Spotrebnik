@@ -21,6 +21,7 @@ class Auto(models.Model):
 
 class TypVydaje(models.Model):
     nazev = models.CharField(max_length=50, unique=True)
+    je_palivo = models.BooleanField(default=False)
 
     def __str__(self):
         return self.nazev

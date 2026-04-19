@@ -123,6 +123,7 @@ main.container {
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-soft);
+  height: 100%;
 }
 
 .kpi-label {
