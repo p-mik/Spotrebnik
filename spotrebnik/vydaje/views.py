@@ -277,23 +277,29 @@ def home(request):
     souhrn_typu = base_qs.values('typ__nazev').annotate(celkova_castka=Sum('castka'))
 
     rozsah = request.GET.get('rozsah', 'rok')
+    auto_filter = request.GET.get('auto', '')
     rozsah_map = {'mesic': 30, '3mesice': 90, 'rok': 365}
     graf_qs = base_qs.filter(cena_za_litr__isnull=False).select_related('auto').order_by('datum')
     if rozsah in rozsah_map:
         graf_qs = graf_qs.filter(datum__gte=dnes - timedelta(days=rozsah_map[rozsah]))
+    if auto_filter:
+        graf_qs = graf_qs.filter(auto__id=auto_filter)
 
-    graf_data = json.dumps([
-        {
+    graf_dict = {}
+    for v in graf_qs:
+        nazev = v.auto.nazev
+        if nazev not in graf_dict:
+            graf_dict[nazev] = []
+        graf_dict[nazev].append({
             'datum': v.datum.isoformat(),
             'cena_za_litr': float(v.cena_za_litr),
             'mnozstvi_litru': float(v.mnozstvi_litru) if v.mnozstvi_litru else None,
-            'auto': v.auto.nazev,
             'castka': float(v.castka),
             'popis': v.popis or '',
-        }
-        for v in graf_qs
-    ])
+        })
+    graf_data = json.dumps(graf_dict)
     prumerna_cena_obdobi = graf_qs.aggregate(prumer=Avg('cena_za_litr'))['prumer'] or 0
+    auta = Auto.objects.filter(uzivatel=request.user)
 
     return render(
         request,
@@ -307,6 +313,8 @@ def home(request):
             'souhrn_typu': souhrn_typu,
             'graf_data': graf_data,
             'rozsah': rozsah,
+            'auto_filter': auto_filter,
+            'auta': auta,
             'prumerna_cena_obdobi': round(float(prumerna_cena_obdobi), 2),
         },
     )

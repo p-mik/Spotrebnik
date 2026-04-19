@@ -5,7 +5,7 @@ from .models import Auto, Vydaj, TypVydaje
 class VydajForm(forms.ModelForm):
     class Meta:
         model = Vydaj
-        fields = ['auto', 'typ', 'datum', 'castka', 'tachometr', 'najezd_od_posledniho_tankovani', 'mnozstvi_litru', 'popis']
+        fields = ['auto', 'typ', 'datum', 'castka', 'mnozstvi_litru', 'tachometr', 'najezd_od_posledniho_tankovani', 'popis']
         widgets = {
             'datum': forms.DateInput(attrs={'type': 'date'}),
         }
@@ -17,6 +17,8 @@ class VydajForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.datum:
+            self.initial['datum'] = self.instance.datum.strftime('%Y-%m-%d')
         if user is not None:
             self.fields['auto'].queryset = Auto.objects.filter(uzivatel=user)
             if (
